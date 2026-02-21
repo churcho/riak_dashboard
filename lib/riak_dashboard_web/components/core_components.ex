@@ -412,6 +412,67 @@ defmodule RiakDashboardWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders a badge/pill with consistent rectangular shape and semantic color.
+
+  ## Variants
+
+    * `:success` - Green for positive states (valid, OK, healthy)
+    * `:warning` - Orange/amber for caution states (pending, joining)
+    * `:error` - Red for error/destructive states (down, unreachable)
+    * `:info` - Blue for informational states
+    * `:neutral` - Default muted style
+
+  ## Examples
+
+      <.badge variant={:success}>OK</.badge>
+      <.badge variant={:warning}>Pending</.badge>
+      <.badge variant={:info} indicator>Live</.badge>
+  """
+  attr(:variant, :atom, default: :neutral, values: [:success, :warning, :error, :info, :neutral])
+  attr(:indicator, :boolean, default: false)
+  attr(:class, :string, default: "")
+  slot(:inner_block, required: true)
+
+  def badge(assigns) do
+    ~H"""
+    <span class={[
+      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold",
+      badge_colors(@variant),
+      @class
+    ]}>
+      <span :if={@indicator} class={["w-2 h-2 rounded-full", indicator_color(@variant)]} />
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  defp badge_colors(:success),
+    do:
+      "text-[#4A7C59] bg-[#E8F5E9] border border-[#C4E6C9] dark:text-[#34D399] dark:bg-[#0f3429] dark:border-[#166534]"
+
+  defp badge_colors(:warning),
+    do:
+      "text-[#E69500] bg-[#FFF8E1] border border-[#FFE0B2] dark:text-[#f59e0b] dark:bg-[#422006] dark:border-[#92400e]"
+
+  defp badge_colors(:error),
+    do:
+      "text-[#C75050] bg-[#FFEBEE] border border-[#FFCDD2] dark:text-[#f87171] dark:bg-[#3a1f22] dark:border-[#7f1d1d]"
+
+  defp badge_colors(:info),
+    do:
+      "text-[#2D80D1] bg-[#E3F2FD] border border-[#BBDEFB] dark:text-[#60A5FA] dark:bg-[#12315a] dark:border-[#1e3a5f]"
+
+  defp badge_colors(:neutral),
+    do:
+      "text-[#5A5A5A] bg-[#F0EFEB] border border-[#E0DDD6] dark:text-[#94A3B8] dark:bg-[#334155] dark:border-[#475569]"
+
+  defp indicator_color(:success), do: "bg-green-500 animate-pulse"
+  defp indicator_color(:warning), do: "bg-amber-500"
+  defp indicator_color(:error), do: "bg-red-500"
+  defp indicator_color(:info), do: "bg-blue-500"
+  defp indicator_color(:neutral), do: "bg-gray-400"
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

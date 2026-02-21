@@ -3,6 +3,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodeTable do
 
   use Phoenix.Component
 
+  import RiakDashboardWeb.CoreComponents, only: [badge: 1]
   import RiakDashboardWeb.Formatters, only: [memory_total_mb: 1]
 
   attr(:nodes, :list, required: true)
@@ -21,25 +22,25 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodeTable do
               <th class="px-4 py-3 text-left text-xs font-semibold text-[#8A8A8A] dark:text-[#94A3B8]">
                 Status
               </th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A]">
+              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A] dark:text-[#94A3B8]">
                 Ring %
               </th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A]">
+              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A] dark:text-[#94A3B8]">
                 Memory
               </th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A]">
+              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A] dark:text-[#94A3B8]">
                 Processes
               </th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A]">
+              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A] dark:text-[#94A3B8]">
                 Gets
               </th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A]">
+              <th class="px-4 py-3 text-right text-xs font-semibold text-[#8A8A8A] dark:text-[#94A3B8]">
                 Puts
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr :for={node <- @nodes} class="border-t border-[#F0EFEB]">
+            <tr :for={node <- @nodes} class="border-t border-[#F0EFEB] dark:border-[#334155]">
               <td class="px-4 py-3 font-mono text-sm">
                 <.link
                   navigate={"/nodes/#{URI.encode(node["name"])}"}
@@ -54,29 +55,34 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodeTable do
                 </.link>
               </td>
               <td class="px-4 py-3 text-sm">
-                <span class={status_badge_class(node["status"])}>{node["status"]}</span>
+                <.badge
+                  variant={node_status_variant(node["status"])}
+                  class="uppercase tracking-wide text-[10px] py-0.5 px-1.5"
+                >
+                  {node["status"]}
+                </.badge>
               </td>
-              <td class="px-4 py-3 text-sm text-right text-[#1A1A1A]">
+              <td class="px-4 py-3 text-sm text-right text-[#1A1A1A] dark:text-[#E2E8F0]">
                 {node["ring_pct"]}%
               </td>
               <% stats = Map.get(@node_stats, node["name"]) %>
               <%= if stats do %>
-                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A]">
+                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A] dark:text-[#E2E8F0]">
                   {memory_total_mb(stats["erlang"])} MB
                 </td>
-                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A]">
+                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A] dark:text-[#E2E8F0]">
                   {stats["erlang"]["process_count"]}
                 </td>
-                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A]">
+                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A] dark:text-[#E2E8F0]">
                   {stats["kv"]["node_gets"]}
                 </td>
-                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A]">
+                <td class="px-4 py-3 text-sm text-right text-[#1A1A1A] dark:text-[#E2E8F0]">
                   {stats["kv"]["node_puts"]}
                 </td>
               <% else %>
                 <td
                   colspan="4"
-                  class="px-4 py-3 text-sm text-center text-[#A8A8A8]"
+                  class="px-4 py-3 text-sm text-center text-[#A8A8A8] dark:text-[#6B7280]"
                 >
                   -
                 </td>
@@ -89,16 +95,10 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodeTable do
     """
   end
 
-  @badge_styles %{
-    "valid" => "text-[#4A7C59] bg-[#E8F5E9]",
-    "leaving" => "text-[#E69500] bg-[#FFF8E1] dark:text-[#f59e0b] dark:bg-[#422006]",
-    "exiting" => "text-[#E69500] bg-[#FFF8E1] dark:text-[#f59e0b] dark:bg-[#422006]",
-    "joining" => "text-[#2D80D1] bg-[#E3F2FD] dark:text-[#60a5fa] dark:bg-[#12315a]",
-    "down" => "text-[#C75050] bg-[#FFEBEE] dark:text-[#f87171] dark:bg-[#3a1f22]"
-  }
-
-  defp status_badge_class(status) do
-    colors = Map.get(@badge_styles, status, "text-[#2D80D1] bg-[#E3F2FD]")
-    "text-xs font-semibold #{colors} px-2 py-0.5 rounded-full"
-  end
+  defp node_status_variant("valid"), do: :success
+  defp node_status_variant("leaving"), do: :warning
+  defp node_status_variant("exiting"), do: :warning
+  defp node_status_variant("joining"), do: :info
+  defp node_status_variant("down"), do: :error
+  defp node_status_variant(_), do: :info
 end

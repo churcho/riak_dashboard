@@ -180,10 +180,6 @@ defmodule RiakDashboardWeb.CrdtLive do
   def render(%{live_action: :index} = assigns) do
     ~H"""
     <div>
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">CRDTs</h1>
-      </div>
-
       <.error_banner :if={@error} message={@error} />
 
       <div class="bg-white rounded-xl border border-[#EEEDEA] p-4 mb-4">
@@ -276,17 +272,12 @@ defmodule RiakDashboardWeb.CrdtLive do
         <span class="text-[#1A1A1A] font-medium">{@key}</span>
       </nav>
 
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <div class="flex items-center gap-3">
-          <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
-            {@key}
-          </h1>
-          <%= if @crdt_type do %>
-            <span class="px-2 py-0.5 rounded text-xs font-medium bg-white text-[#e77117] border border-[#EEECE8]">
-              {@crdt_type}
-            </span>
-          <% end %>
-        </div>
+      <div class="flex items-center justify-end flex-wrap gap-3 mb-6">
+        <%= if @crdt_type do %>
+          <span class="px-2 py-0.5 rounded text-xs font-medium bg-white text-[#e77117] border border-[#EEECE8] mr-auto">
+            {@crdt_type}
+          </span>
+        <% end %>
         <button
           phx-click="reload"
           class="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer bg-white text-[#1A1A1A] border border-[#EEECE8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]"

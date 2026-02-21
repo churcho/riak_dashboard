@@ -72,11 +72,11 @@ const RingChart = {
 
     // Draw center text
     this.ctx.fillStyle = centerText;
-    this.ctx.font = "bold 24px 'DM Sans', sans-serif";
+    this.ctx.font = "bold 24px 'Inter', sans-serif";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(partitions.length, cx, cy - 10);
-    this.ctx.font = "12px 'DM Sans', sans-serif";
+    this.ctx.font = "12px 'Figtree', sans-serif";
     this.ctx.fillStyle = subtitleText;
     this.ctx.fillText("partitions", cx, cy + 12);
   }

@@ -165,10 +165,6 @@ defmodule RiakDashboardWeb.TypePropsLive do
   def render(%{live_action: :index} = assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold mb-6 text-[#1A1A1A]">
-        Type Properties
-      </h1>
-
       <div class="bg-white rounded-xl border border-[#EEEDEA] px-4 py-4 mb-6">
         <h2 class="text-sm font-semibold mb-3 text-[#8A8A8A]">
           Known Types
@@ -233,10 +229,7 @@ defmodule RiakDashboardWeb.TypePropsLive do
         <span class="text-[#1A1A1A] font-medium">Properties</span>
       </nav>
 
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
-          Properties for type <code class="text-[#e77117]">{@type}</code>
-        </h1>
+      <div class="flex items-center justify-end flex-wrap gap-3 mb-6">
         <button
           :if={@props}
           phx-click="toggle_edit"

@@ -6,4 +6,10 @@ defmodule RiakDashboardWeb.PageController do
     # so skip the default app layout.
     render(conn, :home, layout: false)
   end
+
+  def redirect_to_cluster(conn, _params) do
+    conn
+    |> put_status(301)
+    |> redirect(to: "/")
+  end
 end

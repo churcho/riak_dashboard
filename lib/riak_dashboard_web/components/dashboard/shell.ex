@@ -17,10 +17,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
     %{
       label: "MONITORING",
       items: [
-        %{name: "Ring", icon: "ring", path: "/ring"},
-        %{name: "Nodes", icon: "server", path: "/nodes"},
-        %{name: "Handoff", icon: "transfer", path: "/handoff"},
-        %{name: "AAE", icon: "shield", path: "/aae"}
+        %{name: "Nodes", icon: "server", path: "/nodes"}
       ]
     },
     %{

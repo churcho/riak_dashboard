@@ -3,40 +3,41 @@ defmodule RiakDashboardWeb.Components.Dashboard.Cards do
 
   use Phoenix.Component
 
+  import RiakDashboardWeb.Components.Dashboard.Icons
+  import RiakDashboardWeb.CoreComponents, only: [badge: 1]
+
   attr(:title, :string, required: true)
   attr(:value, :any, required: true)
   attr(:subtitle, :string, default: nil)
   attr(:status, :atom, default: nil)
+  attr(:icon, :string, default: nil)
+  attr(:icon_color, :string, default: "text-[#1A1A1A]/[0.06] dark:text-[#E2E8F0]/[0.08]")
+  attr(:tooltip, :string, default: nil)
 
   def stat_card(assigns) do
     ~H"""
-    <div class="flex-1 min-w-0 bg-white rounded-xl border border-[#EEEDEA] px-[18px] py-4">
-      <div class="text-xs text-[#8A8A8A] mb-2">{@title}</div>
-      <div class="flex items-center gap-2">
-        <span class="text-[30px] font-bold text-[#1A1A1A] tracking-tight leading-none dark:text-[#E2E8F0]">
-          {@value}
-        </span>
-        <span
-          :if={@status == :ok}
-          class="text-xs font-semibold text-[#4A7C59] bg-[#E8F5E9] px-2 py-0.5 rounded-full dark:text-[#34D399] dark:bg-[#0f3429]"
-        >
-          OK
-        </span>
-        <span
-          :if={@status == :warning}
-          class="text-xs font-semibold text-[#E69500] bg-[#FFF8E1] px-2 py-0.5 rounded-full dark:text-[#f59e0b] dark:bg-[#422006]"
-        >
-          Pending
-        </span>
-        <span
-          :if={@status == :error}
-          class="text-xs font-semibold text-[#C75050] bg-[#FFEBEE] px-2 py-0.5 rounded-full dark:text-[#f87171] dark:bg-[#3a1f22]"
-        >
-          Error
-        </span>
-      </div>
-      <div :if={@subtitle} class="mt-2.5 text-[11px] text-[#A5A5A5]">
-        {@subtitle}
+    <div
+      class={["min-w-0", @tooltip && "tooltip tooltip-bottom"]}
+      data-tip={@tooltip}
+    >
+      <div class="relative h-full bg-white rounded-xl border border-[#EEEDEA] px-3.5 py-3 overflow-hidden dark:bg-[#1f2937] dark:border-[#374151]">
+        <div :if={@icon} class={"absolute -bottom-1.5 -right-1.5 pointer-events-none #{@icon_color}"}>
+          <.nav_icon name={@icon} size={44} />
+        </div>
+        <div class="relative">
+          <div class="text-[11px] text-[#8A8A8A] mb-1 dark:text-[#9CA3AF]">{@title}</div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-lg font-bold font-heading text-[#1A1A1A] tracking-tight leading-none truncate dark:text-[#E2E8F0]">
+              {@value}
+            </span>
+            <.badge :if={@status == :ok} variant={:success}>OK</.badge>
+            <.badge :if={@status == :warning} variant={:warning}>Pending</.badge>
+            <.badge :if={@status == :error} variant={:error}>Error</.badge>
+          </div>
+          <div class="mt-1.5 text-[10px] text-[#A5A5A5] truncate dark:text-[#6B7280]">
+            {@subtitle}&nbsp;
+          </div>
+        </div>
       </div>
     </div>
     """

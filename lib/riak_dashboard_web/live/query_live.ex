@@ -89,10 +89,6 @@ defmodule RiakDashboardWeb.QueryLive do
   def render(assigns) do
     ~H"""
     <div>
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">Query</h1>
-      </div>
-
       <.error_banner :if={@error} message={@error} />
 
       <div class="bg-white rounded-xl border border-[#EEEDEA] px-4 py-4 mb-4">
