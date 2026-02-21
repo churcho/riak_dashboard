@@ -47,6 +47,7 @@ defmodule RiakDashboardWeb.Layouts do
         <.breadcrumb_header
           active_nav={assigns[:active_nav]}
           page_title={assigns[:page_title] || "Dashboard"}
+          ws_status={assigns[:ws_status]}
         />
         {@inner_content}
         <.flash_group flash={@flash} />

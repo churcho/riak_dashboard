@@ -45,7 +45,7 @@
     </g>
   </g>
 
-  <text x="148" y="92" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="34" font-weight="700" fill="#E8E8E8" letter-spacing="-0.3">
-    <tspan fill="#F5923A">riak</tspan><tspan fill="#E8E8E8">-dashboard</tspan>
+  <text x="148" y="92" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="34" font-weight="700" fill="#F1F5F9" letter-spacing="-0.3">
+    <tspan fill="#F5923A">Riak</tspan><tspan fill="#F1F5F9"> Dashboard</tspan>
   </text>
 </svg>

@@ -11,6 +11,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
   use Phoenix.Component
 
   import RiakDashboardWeb.Components.Dashboard.ChoicesSelect
+  import RiakDashboardWeb.Components.Dashboard.Connection
   import RiakDashboardWeb.Components.Dashboard.Icons
   import RiakDashboardWeb.CoreComponents, only: [icon: 1]
 
@@ -80,12 +81,12 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
     ~H"""
     <div class="w-full h-full flex flex-col text-[13px] font-sans bg-[#FAFAF8] border-r border-[#EEECE8] transition-colors duration-200 dark:bg-[#1E293B] dark:border-[#334155]">
       <%!-- Logo --%>
-      <div class="px-[18px] pt-6 pb-4 flex items-center justify-between">
+      <div class="px-2.5 pt-6 pb-4 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2 no-underline">
           <img
             src="/images/openriak_dashboard_logo.svg"
             alt="riak-dashboard"
-            class="theme-logo h-14 w-auto max-w-[178px] object-contain transition-all duration-200"
+            class="theme-logo h-auto w-full max-w-[250px] object-contain transition-all duration-200"
             data-theme-image
           />
         </a>
@@ -109,16 +110,25 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
             Cluster
           </span>
         </div>
-        <.choices_select
-          id="cluster-selector"
-          options={build_cluster_options(@cluster_name, @remote_dcs)}
-          selected={@cluster_name}
-          event="select_cluster"
-          value_key="name"
-          compact
-          search_enabled={length(@remote_dcs) > 3}
-          placeholder="Select cluster..."
-        />
+        <%= if @remote_dcs != [] do %>
+          <.choices_select
+            id="cluster-selector"
+            options={build_cluster_options(@cluster_name, @remote_dcs)}
+            selected={@cluster_name}
+            event="select_cluster"
+            value_key="name"
+            compact
+            search_enabled={length(@remote_dcs) > 3}
+            placeholder="Select cluster..."
+          />
+        <% else %>
+          <div
+            class="px-2.5 py-1.5 text-[12px] font-semibold font-mono text-[#e77117] dark:text-[#e77117] truncate"
+            title={@cluster_name}
+          >
+            {@cluster_name}
+          </div>
+        <% end %>
       </div>
 
       <%!-- Navigation --%>
@@ -225,6 +235,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   attr(:active_nav, :string, default: nil)
   attr(:page_title, :string, default: nil)
+  attr(:ws_status, :atom, default: nil)
   slot(:header_right)
 
   def breadcrumb_header(assigns) do
@@ -232,7 +243,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
     assigns = assign(assigns, :section, section)
 
     ~H"""
-    <header class="flex items-center justify-between gap-3 pb-4 mb-6 border-b border-[#EEEDEA] dark:border-[#334155]">
+    <header class="sticky -top-4 sm:-top-6 lg:-top-6 z-10 flex items-center justify-between gap-3 pb-3 pt-4 sm:pt-6 lg:pt-6 mb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b border-[#EEEDEA] bg-[var(--or-bg-base)] dark:border-[#334155]">
       <nav class="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
         <span :if={@section} class="text-[#A5A5A5] dark:text-[#6B7280]">
           {humanize_section(@section)}
@@ -242,7 +253,8 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
           {@page_title}
         </span>
       </nav>
-      <div :if={@header_right != []} class="flex items-center gap-2">
+      <div class="flex items-center gap-2">
+        <.connection_indicator :if={@ws_status} status={@ws_status} />
         {render_slot(@header_right)}
       </div>
     </header>
