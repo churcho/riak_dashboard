@@ -125,14 +125,17 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodePerformance do
       nil ->
         "-"
 
-      erlang_stats ->
-        case erlang_stats do
-          %{"memory_total" => bytes} when is_number(bytes) ->
-            "#{Float.round(bytes / 1_048_576, 1)} MB"
+      %{"memory_total_mb" => value} when is_number(value) ->
+        "#{Float.round(value * 1.0, 1)} MB"
 
-          _ ->
-            "-"
-        end
+      %{"memory" => %{"total" => bytes}} when is_number(bytes) ->
+        "#{Float.round(bytes / 1_048_576, 1)} MB"
+
+      %{"memory_total" => bytes} when is_number(bytes) ->
+        "#{Float.round(bytes / 1_048_576, 1)} MB"
+
+      _ ->
+        "-"
     end
   end
 

@@ -176,12 +176,24 @@ defmodule RiakDashboardWeb.ClusterLive do
     end)
   end
 
+  defp extract_memory_bytes(%{"erlang" => %{"memory_total_mb" => mb}}) when is_number(mb),
+    do: round(mb * 1_048_576)
+
+  defp extract_memory_bytes(%{"erlang" => %{"memory" => %{"total" => bytes}}})
+       when is_number(bytes),
+       do: bytes
+
+  defp extract_memory_bytes(%{"erlang" => %{"memory_total" => bytes}}) when is_number(bytes),
+    do: bytes
+
+  defp extract_memory_bytes(_), do: nil
+
   defp update_sparkline_history(history, node_stats_data) do
     Enum.reduce(node_stats_data, history, fn {node_name, stats}, acc ->
       point = %{
         vnode_gets: get_in(stats, ["kv", "vnode_gets"]) || 0,
         vnode_puts: get_in(stats, ["kv", "vnode_puts"]) || 0,
-        memory: get_in(stats, ["erlang", "memory_total"]) || 0,
+        memory: extract_memory_bytes(stats) || 0,
         processes: get_in(stats, ["erlang", "process_count"]) || 0,
         get_latency: get_in(stats, ["kv", "node_get_fsm_time_mean"]) || 0,
         put_latency: get_in(stats, ["kv", "node_put_fsm_time_mean"]) || 0,
