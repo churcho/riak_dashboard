@@ -1,12 +1,13 @@
 defmodule RiakDashboardWeb.ClusterLive do
   use RiakDashboardWeb, :live_view
 
+  alias RiakDashboard.MetricStore
+
   import RiakDashboardWeb.Components.Dashboard.Cards
   import RiakDashboardWeb.Components.Dashboard.Feedback
   import RiakDashboardWeb.Components.Dashboard.MetricChart
   import RiakDashboardWeb.Components.Dashboard.NodeChips
 
-  @sparkline_max_points 30
   @node_color_palette [
     "#c2185b",
     "#1565c0",
@@ -31,8 +32,14 @@ defmodule RiakDashboardWeb.ClusterLive do
   ]
 
   @impl true
+  @spec mount(map(), map(), Phoenix.LiveView.Socket.t()) ::
+          {:ok, Phoenix.LiveView.Socket.t()}
   def mount(_params, _session, socket) do
     ws_url = Application.get_env(:riak_dashboard, :riak_ws_url)
+
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(RiakDashboard.PubSub, "metrics:updated")
+    end
 
     socket =
       assign(socket,
@@ -49,8 +56,15 @@ defmodule RiakDashboardWeb.ClusterLive do
         aae_count: 0,
         handoff_count: 0,
         selected_node: nil,
-        sparkline_history: %{},
-        selected_metric: "memory",
+        open_node_menu: nil,
+        node_clear_modal_node: nil,
+        selected_metric: "memory_total",
+        selected_metric_group: "memory",
+        selected_range: :recent,
+        show_reset_modal: false,
+        chart_data: [],
+        chart_unit: "",
+        last_chart_query_at: 0,
         loading: true,
         error: nil,
         topics_json: Jason.encode!(~w(cluster node_stats ring aae handoff))
@@ -60,6 +74,8 @@ defmodule RiakDashboardWeb.ClusterLive do
   end
 
   @impl true
+  @spec handle_params(map(), String.t(), Phoenix.LiveView.Socket.t()) ::
+          {:noreply, Phoenix.LiveView.Socket.t()}
   def handle_params(_params, uri, socket) do
     path = URI.parse(uri).path
     active_nav = if path == "/nodes", do: "Nodes", else: nil
@@ -68,6 +84,8 @@ defmodule RiakDashboardWeb.ClusterLive do
 
   # WebSocket lifecycle
   @impl true
+  @spec handle_event(String.t(), map(), Phoenix.LiveView.Socket.t()) ::
+          {:noreply, Phoenix.LiveView.Socket.t()}
   def handle_event("ws_connected", _, socket) do
     {:noreply, assign(socket, ws_status: :connected)}
   end
@@ -94,20 +112,23 @@ defmodule RiakDashboardWeb.ClusterLive do
           _ -> nil
         end
 
-    {:noreply,
-     assign(socket,
-       cluster: data,
-       loading: false,
-       cluster_name: sanitize_cluster_name(data["cluster_name"]),
-       remote_dcs: data["remote_dcs"] || [],
-       selected_node: selected
-     )}
+    socket =
+      assign(socket,
+        cluster: data,
+        loading: false,
+        cluster_name: sanitize_cluster_name(data["cluster_name"]),
+        remote_dcs: data["remote_dcs"] || [],
+        selected_node: selected
+      )
+
+    {:noreply, refresh_chart_data(socket)}
   end
 
   def handle_event("riak_node_stats", data, socket) do
-    history = update_sparkline_history(socket.assigns.sparkline_history, data)
+    MetricStore.record(data)
+    Phoenix.PubSub.broadcast(RiakDashboard.PubSub, "metrics:updated", :ok)
 
-    {:noreply, assign(socket, node_stats: data, sparkline_history: history)}
+    {:noreply, assign(socket, node_stats: data)}
   end
 
   def handle_event("riak_ring", data, socket) when is_map(data) do
@@ -152,7 +173,14 @@ defmodule RiakDashboardWeb.ClusterLive do
              aae_count: 0,
              handoff_count: 0,
              selected_node: nil,
-             sparkline_history: %{},
+             open_node_menu: nil,
+             node_clear_modal_node: nil,
+             selected_metric_group: "memory",
+             selected_range: :recent,
+             show_reset_modal: false,
+             chart_data: [],
+             chart_unit: "",
+             last_chart_query_at: 0,
              loading: true
            )}
       end
@@ -160,24 +188,140 @@ defmodule RiakDashboardWeb.ClusterLive do
   end
 
   def handle_event("select_node", %{"node" => node_name}, socket) do
-    {:noreply, assign(socket, selected_node: node_name)}
+    socket = assign(socket, selected_node: node_name, open_node_menu: nil)
+    {:noreply, refresh_chart_data(socket)}
   end
 
   def handle_event("select_metric", %{"metric" => key}, socket) do
-    {:noreply, assign(socket, selected_metric: key)}
+    socket =
+      assign(socket,
+        selected_metric: key,
+        selected_metric_group: metric_group_for(key)
+      )
+
+    {:noreply, refresh_chart_data(socket)}
+  end
+
+  def handle_event("select_metric_group", %{"group" => group_key}, socket) do
+    selected_metric =
+      if metric_group_for(socket.assigns.selected_metric) == group_key do
+        socket.assigns.selected_metric
+      else
+        default_metric_for_group(group_key)
+      end
+
+    {:noreply,
+     assign(socket,
+       selected_metric_group: group_key,
+       selected_metric: selected_metric
+     )}
+  end
+
+  def handle_event("select_range", %{"range" => range}, socket) do
+    socket = assign(socket, selected_range: range_from_param(range))
+    {:noreply, refresh_chart_data(socket)}
+  end
+
+  def handle_event("open_reset_modal", _params, socket) do
+    {:noreply, assign(socket, show_reset_modal: true)}
+  end
+
+  def handle_event("close_reset_modal", _params, socket) do
+    {:noreply, assign(socket, show_reset_modal: false)}
+  end
+
+  def handle_event("confirm_reset_metrics", _params, socket) do
+    MetricStore.reset()
+    Phoenix.PubSub.broadcast(RiakDashboard.PubSub, "metrics:updated", :ok)
+    socket = assign(socket, show_reset_modal: false)
+    {:noreply, refresh_chart_data(socket)}
+  end
+
+  def handle_event("toggle_node_actions", %{"node" => node_name}, socket) do
+    open_node_menu =
+      if socket.assigns.open_node_menu == node_name do
+        nil
+      else
+        node_name
+      end
+
+    {:noreply, assign(socket, open_node_menu: open_node_menu)}
+  end
+
+  def handle_event("close_node_actions", _params, socket) do
+    {:noreply, assign(socket, open_node_menu: nil)}
+  end
+
+  def handle_event("open_node_clear_modal", %{"node" => node_name}, socket) do
+    {:noreply, assign(socket, node_clear_modal_node: node_name, open_node_menu: nil)}
+  end
+
+  def handle_event("close_node_clear_modal", _params, socket) do
+    {:noreply, assign(socket, node_clear_modal_node: nil)}
+  end
+
+  def handle_event("confirm_delete_node_history", %{"node" => node_name}, socket) do
+    MetricStore.delete_node(node_name)
+    Phoenix.PubSub.broadcast(RiakDashboard.PubSub, "metrics:updated", :ok)
+    socket = assign(socket, node_clear_modal_node: nil)
+    {:noreply, refresh_chart_data(socket)}
+  end
+
+  @impl true
+  @spec handle_info(term(), Phoenix.LiveView.Socket.t()) ::
+          {:noreply, Phoenix.LiveView.Socket.t()}
+  def handle_info(:ok, socket) do
+    elapsed = System.monotonic_time(:second) - socket.assigns.last_chart_query_at
+    interval = chart_refresh_interval(socket.assigns.selected_range)
+
+    if elapsed >= interval do
+      {:noreply, refresh_chart_data(socket)}
+    else
+      {:noreply, socket}
+    end
   end
 
   # Private helpers
 
-  defp metric_unit("memory"), do: "MB"
-  defp metric_unit("get_latency"), do: "\u00B5s"
-  defp metric_unit("put_latency"), do: "\u00B5s"
-  defp metric_unit(_), do: ""
+  defp chart_refresh_interval(:recent), do: 0
+  defp chart_refresh_interval(:hour), do: 10
+  defp chart_refresh_interval(:day), do: 60
+  defp chart_refresh_interval(:week), do: 300
 
-  defp chart_data_for(sparkline_history, node, metric_key) do
-    sparkline_history
-    |> Map.get(node, [])
-    |> Enum.map(&Map.get(&1, String.to_existing_atom(metric_key), 0))
+  defp refresh_chart_data(socket) do
+    assigns = socket.assigns
+
+    data =
+      chart_data_for_range(assigns.selected_node, assigns.selected_metric, assigns.selected_range)
+
+    unit = metric_unit(assigns.selected_metric)
+
+    assign(socket,
+      chart_data: data,
+      chart_unit: unit,
+      last_chart_query_at: System.monotonic_time(:second)
+    )
+  end
+
+  @metric_units %{
+    "memory_total" => "MB",
+    "memory_processes" => "MB",
+    "memory_ets" => "MB",
+    "get_latency" => "\u00B5s",
+    "put_latency" => "\u00B5s"
+  }
+  defp metric_unit(key), do: Map.get(@metric_units, key, "")
+
+  defp chart_data_for_range(nil, _metric_key, _range), do: []
+
+  defp chart_data_for_range(node_name, metric_key, range) do
+    metric_atom = metric_key_to_atom(metric_key)
+
+    node_name
+    |> MetricStore.query(range)
+    |> Enum.map(fn {ts, metrics} ->
+      %{ts: ts, value: Map.get(metrics, metric_atom, 0)}
+    end)
   end
 
   defp ring_balanced?([]), do: true
@@ -252,37 +396,44 @@ defmodule RiakDashboardWeb.ClusterLive do
     |> Enum.reverse()
   end
 
-  defp extract_memory_bytes(%{"erlang" => %{"memory_total_mb" => mb}}) when is_number(mb),
-    do: round(mb * 1_048_576)
+  @range_atoms %{"recent" => :recent, "hour" => :hour, "day" => :day, "week" => :week}
+  defp range_from_param(key), do: Map.get(@range_atoms, key, :recent)
 
-  defp extract_memory_bytes(%{"erlang" => %{"memory" => %{"total" => bytes}}})
-       when is_number(bytes),
-       do: bytes
+  @metric_atom_keys ~w(
+    memory_total memory_processes memory_ets
+    vnode_gets vnode_puts node_gets node_puts
+    get_latency put_latency
+    processes run_queue read_repairs
+  )a
+  @metric_atoms Map.new(@metric_atom_keys, fn key -> {Atom.to_string(key), key} end)
+  defp metric_key_to_atom(key), do: Map.get(@metric_atoms, key, :memory_total)
 
-  defp extract_memory_bytes(%{"erlang" => %{"memory_total" => bytes}}) when is_number(bytes),
-    do: bytes
+  @metric_groups_map %{
+    "memory_total" => "memory",
+    "memory_processes" => "memory",
+    "memory_ets" => "memory",
+    "vnode_gets" => "throughput",
+    "vnode_puts" => "throughput",
+    "node_gets" => "throughput",
+    "node_puts" => "throughput",
+    "get_latency" => "latency",
+    "put_latency" => "latency",
+    "processes" => "system",
+    "run_queue" => "system",
+    "read_repairs" => "system"
+  }
+  defp metric_group_for(key), do: Map.get(@metric_groups_map, key, "memory")
 
-  defp extract_memory_bytes(_), do: nil
-
-  defp update_sparkline_history(history, node_stats_data) do
-    Enum.reduce(node_stats_data, history, fn {node_name, stats}, acc ->
-      point = %{
-        vnode_gets: get_in(stats, ["kv", "vnode_gets"]) || 0,
-        vnode_puts: get_in(stats, ["kv", "vnode_puts"]) || 0,
-        memory: extract_memory_bytes(stats) || 0,
-        processes: get_in(stats, ["erlang", "process_count"]) || 0,
-        get_latency: get_in(stats, ["kv", "node_get_fsm_time_mean"]) || 0,
-        put_latency: get_in(stats, ["kv", "node_put_fsm_time_mean"]) || 0,
-        read_repairs: get_in(stats, ["kv", "read_repairs"]) || 0
-      }
-
-      existing = Map.get(acc, node_name, [])
-      updated = Enum.take(existing ++ [point], -@sparkline_max_points)
-      Map.put(acc, node_name, updated)
-    end)
-  end
+  @default_metrics %{
+    "memory" => "memory_total",
+    "throughput" => "vnode_gets",
+    "latency" => "get_latency",
+    "system" => "processes"
+  }
+  defp default_metric_for_group(group), do: Map.get(@default_metrics, group, "memory_total")
 
   @impl true
+  @spec render(map()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
     <div
@@ -440,6 +591,7 @@ defmodule RiakDashboardWeb.ClusterLive do
           <.node_chips
             nodes={@cluster["nodes"]}
             selected_node={@selected_node}
+            open_node_menu={@open_node_menu}
             node_dist={@node_dist}
             node_stats={@node_stats}
           />
@@ -449,8 +601,10 @@ defmodule RiakDashboardWeb.ClusterLive do
         <div :if={@selected_node} class="mb-6">
           <.metric_chart
             selected_metric={@selected_metric}
-            data={chart_data_for(@sparkline_history, @selected_node, @selected_metric)}
-            unit={metric_unit(@selected_metric)}
+            selected_metric_group={@selected_metric_group}
+            selected_range={@selected_range}
+            data={@chart_data}
+            unit={@chart_unit}
           />
         </div>
 
@@ -477,6 +631,60 @@ defmodule RiakDashboardWeb.ClusterLive do
           </div>
         </div>
       <% end %>
+
+      <.dialog_modal
+        id="clear-metric-history-modal"
+        show={@show_reset_modal}
+        title="Clear all metric history?"
+        message="This will remove persisted and in-memory metric history for every node across all ranges (5m, 1h, 24h, 7d). This action cannot be undone."
+        variant={:error}
+        on_cancel="close_reset_modal"
+      >
+        <:actions>
+          <button
+            type="button"
+            phx-click="confirm_reset_metrics"
+            class="inline-flex w-full justify-center rounded-md bg-[#DC2626] px-3 py-2 text-sm font-semibold text-white hover:bg-[#B91C1C] sm:w-auto"
+          >
+            Clear all history
+          </button>
+          <button
+            type="button"
+            phx-click="close_reset_modal"
+            class="mt-3 inline-flex w-full justify-center rounded-md border border-[#DDD7CF] bg-white px-3 py-2 text-sm font-semibold text-[#3F3F46] hover:bg-[#F8F6F3] sm:mt-0 sm:w-auto dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B]"
+          >
+            Cancel
+          </button>
+        </:actions>
+      </.dialog_modal>
+
+      <.dialog_modal
+        id="clear-node-history-modal"
+        show={not is_nil(@node_clear_modal_node)}
+        title={"Clear history for #{short_node_name(@node_clear_modal_node)}?"}
+        message="This removes all stored metric history for the selected node across every range (5m, 1h, 24h, 7d). Other nodes are not affected."
+        variant={:error}
+        on_cancel="close_node_clear_modal"
+      >
+        <:actions>
+          <button
+            :if={@node_clear_modal_node}
+            type="button"
+            phx-click="confirm_delete_node_history"
+            phx-value-node={@node_clear_modal_node}
+            class="inline-flex w-full justify-center rounded-md bg-[#DC2626] px-3 py-2 text-sm font-semibold text-white hover:bg-[#B91C1C] sm:w-auto"
+          >
+            Clear node history
+          </button>
+          <button
+            type="button"
+            phx-click="close_node_clear_modal"
+            class="mt-3 inline-flex w-full justify-center rounded-md border border-[#DDD7CF] bg-white px-3 py-2 text-sm font-semibold text-[#3F3F46] hover:bg-[#F8F6F3] sm:mt-0 sm:w-auto dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B]"
+          >
+            Cancel
+          </button>
+        </:actions>
+      </.dialog_modal>
     </div>
     """
   end

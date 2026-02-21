@@ -38,3 +38,6 @@ npm-debug.log
 # Local environment overrides
 .env
 local.env
+
+# Metric history storage
+priv/data/*.dets
