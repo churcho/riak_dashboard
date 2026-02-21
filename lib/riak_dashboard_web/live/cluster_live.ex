@@ -2,8 +2,22 @@ defmodule RiakDashboardWeb.ClusterLive do
   use RiakDashboardWeb, :live_view
 
   import RiakDashboardWeb.Components.Dashboard.Cards
-  import RiakDashboardWeb.Components.Dashboard.NodeTable
+  import RiakDashboardWeb.Components.Dashboard.Connection
   import RiakDashboardWeb.Components.Dashboard.Feedback
+  import RiakDashboardWeb.Components.Dashboard.NodeChips
+  import RiakDashboardWeb.Components.Dashboard.NodePerformance
+  import RiakDashboardWeb.Components.Dashboard.RingPanel
+
+  @sparkline_max_points 30
+  @node_color_palette [
+    "#e77117",
+    "#63819b",
+    "#27d7b9",
+    "#2d80d1",
+    "#d12d2d",
+    "#e39e1b",
+    "#2cd284"
+  ]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -20,9 +34,15 @@ defmodule RiakDashboardWeb.ClusterLive do
         remote_dcs: [],
         cluster_selector_open: false,
         node_stats: %{},
+        ring: nil,
+        node_dist: [],
+        aae_count: 0,
+        handoff_count: 0,
+        selected_node: nil,
+        sparkline_history: %{},
         loading: true,
         error: nil,
-        topics_json: Jason.encode!(~w(cluster node_stats membership dcs))
+        topics_json: Jason.encode!(~w(cluster node_stats ring aae handoff))
       )
 
     {:ok, socket}
@@ -35,7 +55,7 @@ defmodule RiakDashboardWeb.ClusterLive do
     {:noreply, assign(socket, active_nav: active_nav)}
   end
 
-  # WebSocket event handlers
+  # WebSocket lifecycle
   @impl true
   def handle_event("ws_connected", _, socket) do
     {:noreply, assign(socket, ws_status: :connected)}
@@ -54,21 +74,51 @@ defmodule RiakDashboardWeb.ClusterLive do
      )}
   end
 
+  # Data events
   def handle_event("riak_cluster", data, socket) do
+    selected =
+      socket.assigns.selected_node ||
+        case data["nodes"] do
+          [first | _] -> first["name"]
+          _ -> nil
+        end
+
     {:noreply,
      assign(socket,
        cluster: data,
        loading: false,
        cluster_name: data["cluster_name"],
-       remote_dcs: data["remote_dcs"] || []
+       remote_dcs: data["remote_dcs"] || [],
+       selected_node: selected
      )}
   end
 
+  def handle_event("riak_node_stats", data, socket) do
+    history = update_sparkline_history(socket.assigns.sparkline_history, data)
+
+    {:noreply, assign(socket, node_stats: data, sparkline_history: history)}
+  end
+
+  def handle_event("riak_ring", data, socket) when is_map(data) do
+    {:noreply, assign(socket, ring: data, node_dist: node_distribution(data))}
+  end
+
+  def handle_event("riak_aae", data, socket) when is_map(data) do
+    {:noreply, assign(socket, aae_count: data["count"] || 0)}
+  end
+
+  def handle_event("riak_handoff", data, socket) when is_map(data) do
+    {:noreply, assign(socket, handoff_count: data["count"] || 0)}
+  end
+
+  def handle_event("riak_membership", _data, socket), do: {:noreply, socket}
+  def handle_event("riak_dcs", _data, socket), do: {:noreply, socket}
+  def handle_event("ws_backpressure", _data, socket), do: {:noreply, socket}
+  def handle_event("ws_error", _data, socket), do: {:noreply, socket}
+
+  # UI events
   def handle_event("toggle_cluster_selector", _, socket) do
-    {:noreply,
-     assign(socket,
-       cluster_selector_open: !socket.assigns.cluster_selector_open
-     )}
+    {:noreply, assign(socket, cluster_selector_open: !socket.assigns.cluster_selector_open)}
   end
 
   def handle_event("select_cluster", %{"name" => name, "url" => admin_url}, socket) do
@@ -82,30 +132,22 @@ defmodule RiakDashboardWeb.ClusterLive do
        cluster_name: name,
        remote_dcs: [],
        node_stats: %{},
+       ring: nil,
+       node_dist: [],
+       aae_count: 0,
+       handoff_count: 0,
+       selected_node: nil,
+       sparkline_history: %{},
        loading: true,
        cluster_selector_open: false
      )}
   end
 
-  def handle_event("riak_node_stats", data, socket) do
-    {:noreply, assign(socket, node_stats: data)}
+  def handle_event("select_node", %{"node" => node_name}, socket) do
+    {:noreply, assign(socket, selected_node: node_name)}
   end
 
-  def handle_event("riak_membership", _data, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("riak_dcs", _data, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("ws_backpressure", _data, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("ws_error", _data, socket) do
-    {:noreply, socket}
-  end
+  # Private helpers
 
   defp derive_ws_url(admin_url) do
     admin_url
@@ -113,6 +155,43 @@ defmodule RiakDashboardWeb.ClusterLive do
     |> String.replace_prefix("https://", "wss://")
     |> String.trim_trailing("/")
     |> Kernel.<>("/api/stream/events")
+  end
+
+  defp node_distribution(ring) do
+    counts = Enum.frequencies_by(ring["partitions"], & &1["node"])
+    total = length(ring["partitions"])
+    colors = ring["node_colors"]
+
+    counts
+    |> Enum.sort_by(fn {node, _count} -> node end)
+    |> Enum.map(fn {node, count} ->
+      color_idx = Map.get(colors, node, 0)
+
+      %{
+        node: node,
+        color: Enum.at(@node_color_palette, rem(color_idx, length(@node_color_palette))),
+        count: count,
+        pct: Float.round(count / total * 100, 1)
+      }
+    end)
+  end
+
+  defp update_sparkline_history(history, node_stats_data) do
+    Enum.reduce(node_stats_data, history, fn {node_name, stats}, acc ->
+      point = %{
+        vnode_gets: get_in(stats, ["kv", "vnode_gets"]) || 0,
+        vnode_puts: get_in(stats, ["kv", "vnode_puts"]) || 0,
+        memory: get_in(stats, ["erlang", "memory_total"]) || 0,
+        processes: get_in(stats, ["erlang", "process_count"]) || 0,
+        get_latency: get_in(stats, ["kv", "node_get_fsm_time_mean"]) || 0,
+        put_latency: get_in(stats, ["kv", "node_put_fsm_time_mean"]) || 0,
+        read_repairs: get_in(stats, ["kv", "read_repairs"]) || 0
+      }
+
+      existing = Map.get(acc, node_name, [])
+      updated = Enum.take(existing ++ [point], -@sparkline_max_points)
+      Map.put(acc, node_name, updated)
+    end)
   end
 
   @impl true
@@ -124,10 +203,15 @@ defmodule RiakDashboardWeb.ClusterLive do
       data-ws-url={@ws_url}
       data-topics={@topics_json}
     >
+      <div class="flex items-center justify-end flex-wrap gap-3 mb-6">
+        <.connection_indicator status={@ws_status} />
+      </div>
+
       <.loading_text :if={@loading} label="Loading cluster data..." />
 
       <%= if @cluster do %>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <%!-- Section 1: Summary Cards --%>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           <.stat_card
             title="Cluster"
             value={@cluster["cluster_name"]}
@@ -136,8 +220,9 @@ defmodule RiakDashboardWeb.ClusterLive do
             icon="dashboard"
           />
           <.stat_card
-            title="Ring Size"
+            title="Ring"
             value={@cluster["ring_size"]}
+            subtitle={"#{if @ring, do: length(@ring["partitions"]), else: @cluster["ring_size"]} partitions"}
             icon="ring"
           />
           <.stat_card
@@ -152,27 +237,60 @@ defmodule RiakDashboardWeb.ClusterLive do
             status={if @cluster["ready"], do: :ok, else: :warning}
             icon="shield"
           />
+          <.stat_card
+            title="AAE Exchanges"
+            value={@aae_count}
+            status={if @aae_count == 0, do: :ok, else: :info}
+            icon="shield"
+          />
+          <.stat_card
+            title="Handoffs"
+            value={@handoff_count}
+            status={if @handoff_count == 0, do: :ok, else: :warning}
+            icon="transfer"
+          />
         </div>
 
-        <div class="mb-4">
-          <h2 class="text-lg font-semibold mb-3 text-[#1A1A1A] dark:text-[#E2E8F0]">Nodes</h2>
-          <.node_table nodes={@cluster["nodes"]} node_stats={@node_stats} />
+        <%!-- Section 2: Node Chips --%>
+        <div class="mb-6">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-[#8A8A8A] dark:text-[#94A3B8] mb-3">
+            Nodes
+          </h2>
+          <.node_chips nodes={@cluster["nodes"]} selected_node={@selected_node} />
         </div>
 
+        <%!-- Section 3: Two-Panel Display --%>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
+          <div class="lg:col-span-7">
+            <.node_performance
+              nodes={@cluster["nodes"]}
+              selected_node={@selected_node}
+              node_stats={@node_stats}
+              sparkline_history={@sparkline_history}
+            />
+          </div>
+          <div class="lg:col-span-5">
+            <.ring_panel ring={@ring} node_dist={@node_dist} />
+          </div>
+        </div>
+
+        <%!-- Section 4: Remote Datacenters --%>
         <div
           :if={@cluster["remote_dcs"] != [] and @cluster["remote_dcs"] != nil}
-          class="mt-6"
+          class="mt-2"
         >
-          <h2 class="text-lg font-semibold mb-3 text-[#1A1A1A] dark:text-[#E2E8F0]">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-[#8A8A8A] dark:text-[#94A3B8] mb-3">
             Remote Datacenters
           </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               :for={dc <- @cluster["remote_dcs"]}
-              class="bg-white rounded-xl border border-[#EEEDEA] px-4 py-3"
+              class="bg-white rounded-xl border border-[#EEEDEA] px-4 py-3 dark:bg-[var(--or-bg-surface)] dark:border-[var(--or-border-base)]"
             >
-              <div class="font-semibold text-[#1A1A1A]">{dc["name"]}</div>
-              <div class="text-xs mt-1 text-[#8A8A8A]">
+              <div class="font-semibold text-sm text-[#1A1A1A] dark:text-[var(--or-fg-base)]">
+                {dc["name"]}
+              </div>
+              <div class="text-xs mt-1 text-[#8A8A8A] dark:text-[var(--or-fg-muted)]">
                 {dc["admin_url"]} &middot; v{dc["riak_version"]}
               </div>
             </div>
