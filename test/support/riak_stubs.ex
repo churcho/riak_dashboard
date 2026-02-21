@@ -33,8 +33,11 @@ defmodule RiakDashboard.Test.RiakStubs do
            %{"name" => name, "status" => "valid", "ring_pct" => 20.0, "reachable" => true}
          end),
        "pending_changes" => [],
-       "remote_dcs" => [],
-       "total_dcs" => 1
+       "remote_dcs" => [
+         %{"name" => "us-west-2", "admin_url" => "http://10.0.2.1:8098", "riak_version" => "3.2.0"},
+         %{"name" => "eu-central-1", "admin_url" => "http://10.0.3.1:8098", "riak_version" => "3.2.0"}
+       ],
+       "total_dcs" => 3
      }}
   end
 
