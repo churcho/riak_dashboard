@@ -42,10 +42,12 @@ RIAK_WS_URL=ws://my-riak-node:8099/api/stream/events \
 mix phx.server
 ```
 
-For local quickstart clusters where Riak nodes run as `dev1`, `dev2`, etc., the admin API usually binds to `10015`, `10025`, `10035`, ... (`devN` -> `100N5`).  
-Use `local.env` before starting:
+For local quickstart clusters where Riak nodes run as `dev1`, `dev2`, etc., the admin API usually binds to `10015`, `10025`, `10035`, ... (`devN` -> `100N5`).
+
+Copy and source the sample:
 
 ```bash
+cp example.local.env local.env
 source local.env
 mix phx.server
 ```
