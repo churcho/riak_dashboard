@@ -15,7 +15,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodeChips do
         phx-click="select_node"
         phx-value-node={node["name"]}
         class={[
-          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono transition-all duration-150",
+          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono transition-all duration-150",
           "hover:border-[#e77117]/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]",
           if(node["name"] == @selected_node,
             do:
