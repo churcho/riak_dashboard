@@ -37,9 +37,18 @@ defmodule RiakDashboardWeb.Layouts do
         aria-hidden="true"
       />
 
-      <.sidebar active_nav={assigns[:active_nav] || "Cluster"} />
+      <.sidebar
+        active_nav={assigns[:active_nav] || "Cluster"}
+        cluster_name={assigns[:cluster_name]}
+        remote_dcs={assigns[:remote_dcs] || []}
+        cluster_selector_open={assigns[:cluster_selector_open] || false}
+      />
 
       <main id="main-content" class="flex-1 overflow-y-auto p-4 pt-14 sm:p-6 sm:pt-14 lg:pt-6">
+        <.breadcrumb_header
+          active_nav={assigns[:active_nav]}
+          page_title={assigns[:page_title] || "Dashboard"}
+        />
         {@inner_content}
         <.flash_group flash={@flash} />
       </main>

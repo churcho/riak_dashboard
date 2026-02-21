@@ -3,7 +3,6 @@ defmodule RiakDashboardWeb.ClusterLive do
 
   import RiakDashboardWeb.Components.Dashboard.Cards
   import RiakDashboardWeb.Components.Dashboard.NodeTable
-  import RiakDashboardWeb.Components.Dashboard.Connection
   import RiakDashboardWeb.Components.Dashboard.Feedback
 
   @impl true
@@ -17,6 +16,9 @@ defmodule RiakDashboardWeb.ClusterLive do
         ws_url: ws_url,
         ws_status: :connecting,
         cluster: nil,
+        cluster_name: nil,
+        remote_dcs: [],
+        cluster_selector_open: false,
         node_stats: %{},
         loading: true,
         error: nil,
@@ -53,7 +55,20 @@ defmodule RiakDashboardWeb.ClusterLive do
   end
 
   def handle_event("riak_cluster", data, socket) do
-    {:noreply, assign(socket, cluster: data, loading: false)}
+    {:noreply,
+     assign(socket,
+       cluster: data,
+       loading: false,
+       cluster_name: data["cluster_name"],
+       remote_dcs: data["remote_dcs"] || []
+     )}
+  end
+
+  def handle_event("toggle_cluster_selector", _, socket) do
+    {:noreply,
+     assign(socket,
+       cluster_selector_open: !socket.assigns.cluster_selector_open
+     )}
   end
 
   def handle_event("riak_node_stats", data, socket) do
@@ -85,13 +100,6 @@ defmodule RiakDashboardWeb.ClusterLive do
       data-ws-url={@ws_url}
       data-topics={@topics_json}
     >
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
-          Cluster Overview
-        </h1>
-        <.connection_indicator status={@ws_status} />
-      </div>
-
       <.loading_text :if={@loading} label="Loading cluster data..." />
 
       <%= if @cluster do %>
@@ -100,17 +108,25 @@ defmodule RiakDashboardWeb.ClusterLive do
             title="Cluster"
             value={@cluster["cluster_name"]}
             subtitle={"Claimant: #{@cluster["claimant"]}"}
+            tooltip={"#{@cluster["cluster_name"]}\nClaimant: #{@cluster["claimant"]}"}
+            icon="dashboard"
           />
-          <.stat_card title="Ring Size" value={@cluster["ring_size"]} />
+          <.stat_card
+            title="Ring Size"
+            value={@cluster["ring_size"]}
+            icon="ring"
+          />
           <.stat_card
             title="Nodes"
             value={length(@cluster["nodes"])}
             subtitle={"#{Enum.count(@cluster["nodes"], & &1["reachable"])} reachable"}
+            icon="server"
           />
           <.stat_card
             title="Status"
             value={if @cluster["ready"], do: "Ready", else: "Changes Pending"}
             status={if @cluster["ready"], do: :ok, else: :warning}
+            icon="shield"
           />
         </div>
 
