@@ -1,0 +1,314 @@
+/*
+ * OpenRiak Admin — Design Tokens (CSS Custom Properties)
+ * ======================================================
+ * Drop this into your Phoenix LiveView app.css or import it.
+ *
+ * Uses Tailwind's dark mode class strategy:
+ *   <html class="dark"> triggers dark mode
+ *
+ * Semantic token naming:
+ *   --or-{category}-{role}
+ *   category: bg, fg, border, ring, accent
+ *   role: base, muted, subtle, emphasis, inverse, interactive, hover
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   PALETTE (raw scale values — reference only, prefer semantic tokens)
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Primary (Orange) */
+  --or-primary-50:  #fbf6f3;
+  --or-primary-100: #f8ebe1;
+  --or-primary-200: #f7d7be;
+  --or-primary-300: #f3bb8f;
+  --or-primary-400: #ed9653;
+  --or-primary-500: #e77117;
+  --or-primary-600: #b95a12;
+  --or-primary-700: #94480e;
+  --or-primary-800: #6f360b;
+  --or-primary-900: #4d2609;
+  --or-primary-950: #2b1707;
+
+  /* Slate (Blue-slate) */
+  --or-slate-50:  #f6f7f8;
+  --or-slate-100: #eaedf0;
+  --or-slate-200: #d3dbe2;
+  --or-slate-300: #b4c2cf;
+  --or-slate-400: #8ca1b5;
+  --or-slate-500: #63819b;
+  --or-slate-600: #4f677c;
+  --or-slate-700: #3f5263;
+  --or-slate-800: #2f3d4a;
+  --or-slate-900: #222b34;
+  --or-slate-950: #14191e;
+
+  /* Accent (Teal) */
+  --or-accent-50:  #f3faf9;
+  --or-accent-100: #e3f6f3;
+  --or-accent-200: #c3f3eb;
+  --or-accent-300: #97ecdd;
+  --or-accent-400: #5fe1cb;
+  --or-accent-500: #27d7b9;
+  --or-accent-600: #1fac94;
+  --or-accent-700: #198976;
+  --or-accent-800: #126758;
+  --or-accent-900: #0e473e;
+  --or-accent-950: #0a2823;
+
+  /* Success */
+  --or-success-50:  #f3faf7;
+  --or-success-100: #e3f6ed;
+  --or-success-200: #c4f2dc;
+  --or-success-300: #99e9c3;
+  --or-success-400: #62dea4;
+  --or-success-500: #2cd284;
+  --or-success-600: #23a869;
+  --or-success-700: #1c8754;
+  --or-success-800: #15653f;
+  --or-success-900: #10462c;
+  --or-success-950: #0b271a;
+
+  /* Warning */
+  --or-warning-50:  #fbf8f3;
+  --or-warning-100: #f8f0e2;
+  --or-warning-200: #f6e3c0;
+  --or-warning-300: #f1d091;
+  --or-warning-400: #eab756;
+  --or-warning-500: #e39e1b;
+  --or-warning-600: #b57e16;
+  --or-warning-700: #916511;
+  --or-warning-800: #6d4c0d;
+  --or-warning-900: #4b350a;
+  --or-warning-950: #2a1e08;
+
+  /* Danger */
+  --or-danger-50:  #faf4f4;
+  --or-danger-100: #f6e4e4;
+  --or-danger-200: #f1c5c5;
+  --or-danger-300: #e89a9a;
+  --or-danger-400: #dd6464;
+  --or-danger-500: #d12d2d;
+  --or-danger-600: #a72424;
+  --or-danger-700: #851d1d;
+  --or-danger-800: #641616;
+  --or-danger-900: #451010;
+  --or-danger-950: #270b0b;
+
+  /* Info */
+  --or-info-50:  #f3f7fa;
+  --or-info-100: #e4edf6;
+  --or-info-200: #c4dbf1;
+  --or-info-300: #9ac2e9;
+  --or-info-400: #63a1dd;
+  --or-info-500: #2d80d1;
+  --or-info-600: #2466a7;
+  --or-info-700: #1c5286;
+  --or-info-800: #153d64;
+  --or-info-900: #102b46;
+  --or-info-950: #0b1927;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEMANTIC TOKENS — LIGHT MODE (default)
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Backgrounds ── */
+  --or-bg-base:       var(--or-slate-50);       /* Page background */
+  --or-bg-surface:    #ffffff;                   /* Cards, panels */
+  --or-bg-muted:      var(--or-slate-100);       /* Subtle differentiation */
+  --or-bg-subtle:     var(--or-slate-200);       /* Borders-as-fills, zebra rows */
+  --or-bg-emphasis:   var(--or-slate-900);       /* Inverted sections, tooltips */
+  --or-bg-overlay:    rgba(34, 43, 52, 0.6);     /* Modal backdrop */
+
+  /* ── Foreground / Text ── */
+  --or-fg-base:       var(--or-slate-900);       /* Primary text */
+  --or-fg-muted:      var(--or-slate-600);       /* Secondary text */
+  --or-fg-subtle:     var(--or-slate-400);       /* Placeholder, disabled */
+  --or-fg-emphasis:   #ffffff;                    /* Text on emphasis bg */
+  --or-fg-link:       var(--or-primary-600);     /* Links (AA on white) */
+
+  /* ── Brand / Interactive ── */
+  --or-brand:         var(--or-primary-500);     /* Brand fill */
+  --or-brand-hover:   var(--or-primary-600);     /* Brand hover */
+  --or-brand-active:  var(--or-primary-700);     /* Brand active/pressed */
+  --or-brand-muted:   var(--or-primary-100);     /* Brand tint backgrounds */
+  --or-brand-subtle:  var(--or-primary-50);      /* Brand ultra-light */
+  --or-brand-fg:      #ffffff;                    /* Text on brand fill */
+
+  /* ── Accent ── */
+  --or-accent:        var(--or-accent-600);
+  --or-accent-hover:  var(--or-accent-700);
+  --or-accent-muted:  var(--or-accent-100);
+
+  /* ── Borders ── */
+  --or-border-base:   var(--or-slate-200);       /* Default borders */
+  --or-border-muted:  var(--or-slate-100);       /* Subtle dividers */
+  --or-border-emphasis: var(--or-slate-400);     /* Focused/stronger */
+  --or-border-brand:  var(--or-primary-300);     /* Brand-colored borders */
+
+  /* ── Focus ring ── */
+  --or-ring:          var(--or-primary-500);
+  --or-ring-offset:   var(--or-bg-surface);
+
+  /* ── Shadows ── */
+  --or-shadow-sm:     0 1px 2px rgba(34, 43, 52, 0.06);
+  --or-shadow-md:     0 4px 12px rgba(34, 43, 52, 0.08);
+  --or-shadow-lg:     0 8px 24px rgba(34, 43, 52, 0.12);
+  --or-shadow-xl:     0 16px 48px rgba(34, 43, 52, 0.16);
+
+  /* ── Semantic states ── */
+  --or-success-bg:    var(--or-success-50);
+  --or-success-fg:    var(--or-success-700);     /* AA on white */
+  --or-success-border: var(--or-success-200);
+  --or-success-fill:  var(--or-success-500);
+
+  --or-warning-bg:    var(--or-warning-50);
+  --or-warning-fg:    var(--or-warning-700);
+  --or-warning-border: var(--or-warning-200);
+  --or-warning-fill:  var(--or-warning-500);
+
+  --or-danger-bg:     var(--or-danger-50);
+  --or-danger-fg:     var(--or-danger-600);      /* AA on white (7.19:1) */
+  --or-danger-border: var(--or-danger-200);
+  --or-danger-fill:   var(--or-danger-500);
+
+  --or-info-bg:       var(--or-info-50);
+  --or-info-fg:       var(--or-info-700);
+  --or-info-border:   var(--or-info-200);
+  --or-info-fill:     var(--or-info-500);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEMANTIC TOKENS — DARK MODE
+   Activated via <html class="dark"> (Tailwind strategy: "class")
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dark {
+  /* ── Backgrounds ── */
+  --or-bg-base:       var(--or-slate-950);
+  --or-bg-surface:    var(--or-slate-900);
+  --or-bg-muted:      var(--or-slate-800);
+  --or-bg-subtle:     var(--or-slate-700);
+  --or-bg-emphasis:   var(--or-slate-100);
+  --or-bg-overlay:    rgba(20, 25, 30, 0.75);
+
+  /* ── Foreground / Text ── */
+  --or-fg-base:       var(--or-slate-100);
+  --or-fg-muted:      var(--or-slate-300);
+  --or-fg-subtle:     var(--or-slate-500);
+  --or-fg-emphasis:   var(--or-slate-900);
+  --or-fg-link:       var(--or-primary-400);
+
+  /* ── Brand / Interactive ── */
+  --or-brand:         var(--or-primary-500);
+  --or-brand-hover:   var(--or-primary-400);
+  --or-brand-active:  var(--or-primary-300);
+  --or-brand-muted:   rgba(231, 113, 23, 0.15);
+  --or-brand-subtle:  rgba(231, 113, 23, 0.08);
+  --or-brand-fg:      #ffffff;
+
+  /* ── Accent ── */
+  --or-accent:        var(--or-accent-400);
+  --or-accent-hover:  var(--or-accent-300);
+  --or-accent-muted:  rgba(31, 172, 148, 0.15);
+
+  /* ── Borders ── */
+  --or-border-base:   var(--or-slate-700);
+  --or-border-muted:  var(--or-slate-800);
+  --or-border-emphasis: var(--or-slate-500);
+  --or-border-brand:  var(--or-primary-700);
+
+  /* ── Focus ring ── */
+  --or-ring:          var(--or-primary-400);
+  --or-ring-offset:   var(--or-bg-surface);
+
+  /* ── Shadows ── */
+  --or-shadow-sm:     0 1px 2px rgba(0, 0, 0, 0.3);
+  --or-shadow-md:     0 4px 12px rgba(0, 0, 0, 0.4);
+  --or-shadow-lg:     0 8px 24px rgba(0, 0, 0, 0.5);
+  --or-shadow-xl:     0 16px 48px rgba(0, 0, 0, 0.6);
+
+  /* ── Semantic states ── */
+  --or-success-bg:    rgba(44, 210, 132, 0.1);
+  --or-success-fg:    var(--or-success-400);
+  --or-success-border: var(--or-success-800);
+  --or-success-fill:  var(--or-success-500);
+
+  --or-warning-bg:    rgba(227, 158, 27, 0.1);
+  --or-warning-fg:    var(--or-warning-400);
+  --or-warning-border: var(--or-warning-800);
+  --or-warning-fill:  var(--or-warning-500);
+
+  --or-danger-bg:     rgba(209, 45, 45, 0.1);
+  --or-danger-fg:     var(--or-danger-400);
+  --or-danger-border: var(--or-danger-800);
+  --or-danger-fill:   var(--or-danger-500);
+
+  --or-info-bg:       rgba(45, 128, 209, 0.1);
+  --or-info-fg:       var(--or-info-400);
+  --or-info-border:   var(--or-info-800);
+  --or-info-fill:     var(--or-info-500);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES — Optional convenience layer
+   (Use these OR Tailwind arbitrary values: bg-[var(--or-bg-base)])
+   ═══════════════════════════════════════════════════════════════════ */
+
+.or-surface {
+  background-color: var(--or-bg-surface);
+  color: var(--or-fg-base);
+  border-color: var(--or-border-base);
+}
+
+.or-card {
+  background-color: var(--or-bg-surface);
+  border: 1px solid var(--or-border-base);
+  border-radius: 0.75rem;
+  box-shadow: var(--or-shadow-sm);
+}
+
+.or-card:hover {
+  box-shadow: var(--or-shadow-md);
+}
+
+.or-btn-primary {
+  background-color: var(--or-brand);
+  color: var(--or-brand-fg);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.or-btn-primary:hover {
+  background-color: var(--or-brand-hover);
+}
+
+.or-btn-primary:active {
+  background-color: var(--or-brand-active);
+}
+
+.or-btn-primary:focus-visible {
+  outline: 2px solid var(--or-ring);
+  outline-offset: 2px;
+}
+
+.or-badge-success { background-color: var(--or-success-bg); color: var(--or-success-fg); border: 1px solid var(--or-success-border); }
+.or-badge-warning { background-color: var(--or-warning-bg); color: var(--or-warning-fg); border: 1px solid var(--or-warning-border); }
+.or-badge-danger  { background-color: var(--or-danger-bg);  color: var(--or-danger-fg);  border: 1px solid var(--or-danger-border); }
+.or-badge-info    { background-color: var(--or-info-bg);    color: var(--or-info-fg);    border: 1px solid var(--or-info-border); }
+
+[class*="or-badge-"] {
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}

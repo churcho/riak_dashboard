@@ -1,0 +1,123 @@
+/* Tailwind CSS 4 with daisyUI */
+@import "tailwindcss" source(none);
+@source "../css";
+@source "../js";
+@source "../../lib/riak_dashboard_web";
+@import "./openriak_tokens.css";
+
+@plugin "../vendor/heroicons";
+
+@plugin "../vendor/daisyui" {
+  themes: false;
+}
+
+/* Dark theme - OpenRiak dark */
+@plugin "../vendor/daisyui-theme" {
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(20.15% 0.012 254.09);
+  --color-base-200: oklch(17% 0.01 254);
+  --color-base-300: oklch(14% 0.008 254);
+  --color-base-content: oklch(95% 0.01 256);
+  --color-primary: oklch(65% 0.19 55);
+  --color-primary-content: oklch(98% 0.01 55);
+  --color-secondary: oklch(60% 0.1 190);
+  --color-secondary-content: oklch(98% 0.01 190);
+  --color-accent: oklch(60% 0.15 190);
+  --color-accent-content: oklch(98% 0.01 190);
+  --color-neutral: oklch(30% 0.015 254);
+  --color-neutral-content: oklch(95% 0.005 254);
+  --color-info: oklch(58% 0.158 241.966);
+  --color-info-content: oklch(97% 0.013 236.62);
+  --color-success: oklch(60% 0.118 184.704);
+  --color-success-content: oklch(98% 0.014 180.72);
+  --color-warning: oklch(66% 0.179 58.318);
+  --color-warning-content: oklch(98% 0.022 95.277);
+  --color-error: oklch(58% 0.253 17.585);
+  --color-error-content: oklch(96% 0.015 12.422);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.21875rem;
+  --size-field: 0.21875rem;
+  --border: 1.5px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* Light theme - OpenRiak light */
+@plugin "../vendor/daisyui-theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(98% 0.003 250);
+  --color-base-200: oklch(96% 0.004 250);
+  --color-base-300: oklch(92% 0.006 250);
+  --color-base-content: oklch(21% 0.01 254);
+  --color-primary: oklch(65% 0.19 55);
+  --color-primary-content: oklch(98% 0.01 55);
+  --color-secondary: oklch(50% 0.06 254);
+  --color-secondary-content: oklch(98% 0.002 254);
+  --color-accent: oklch(55% 0.1 190);
+  --color-accent-content: oklch(98% 0.01 190);
+  --color-neutral: oklch(44% 0.017 254);
+  --color-neutral-content: oklch(98% 0 0);
+  --color-info: oklch(62% 0.214 259.815);
+  --color-info-content: oklch(97% 0.014 254.604);
+  --color-success: oklch(70% 0.14 182.503);
+  --color-success-content: oklch(98% 0.014 180.72);
+  --color-warning: oklch(66% 0.179 58.318);
+  --color-warning-content: oklch(98% 0.022 95.277);
+  --color-error: oklch(65% 0.241 354.308);
+  --color-error-content: oklch(97% 0.014 343.198);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.21875rem;
+  --size-field: 0.21875rem;
+  --border: 1.5px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* LiveView loading variants */
+@custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
+@custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
+@custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
+
+/* Make LiveView wrapper divs transparent */
+[data-phx-root-id] { display: contents }
+
+@theme {
+  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Scrollbar styling */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+#main-content {
+  scrollbar-width: thin;
+  scrollbar-color: #D8D5CE transparent;
+}
+#main-content::-webkit-scrollbar {
+  width: 5px;
+}
+#main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+#main-content::-webkit-scrollbar-thumb {
+  background: #D8D5CE;
+  border-radius: 4px;
+}
+#main-content::-webkit-scrollbar-thumb:hover {
+  background: #BBB;
+}
