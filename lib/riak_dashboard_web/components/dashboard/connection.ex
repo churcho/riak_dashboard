@@ -9,10 +9,12 @@ defmodule RiakDashboardWeb.Components.Dashboard.Connection do
     ~H"""
     <div class={[
       "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold",
-      @status == :connected && "text-[#4A7C59] bg-[#E8F5E9] border border-[#C4E6C9]",
+      @status == :connected &&
+        "text-[#4A7C59] bg-[#E8F5E9] border border-[#C4E6C9] dark:text-[#34D399] dark:bg-[#0f3429] dark:border-[#166534]",
       @status in [:disconnected, :connecting] &&
-        "text-[#E69500] bg-[#FFF8E1] border border-[#FFE0B2]",
-      @status == :not_configured && "text-[#C62828] bg-[#FFEBEE] border border-[#FFCDD2]"
+        "text-[#E69500] bg-[#FFF8E1] border border-[#FFE0B2] dark:text-[#f59e0b] dark:bg-[#422006] dark:border-[#92400e]",
+      @status == :not_configured &&
+        "text-[#C62828] bg-[#FFEBEE] border border-[#FFCDD2] dark:text-[#f87171] dark:bg-[#3a1f22] dark:border-[#7f1d1d]"
     ]}>
       <span class={[
         "w-2 h-2 rounded-full",

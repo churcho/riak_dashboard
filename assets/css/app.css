@@ -5,6 +5,8 @@
 @source "../../lib/riak_dashboard_web";
 @import "./openriak_tokens.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @plugin "../vendor/heroicons";
 
 @plugin "../vendor/daisyui" {
@@ -45,6 +47,12 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
+}
+
+/* Prevent theme transition on first paint */
+.no-transition,
+.no-transition * {
+  transition: none !important;
 }
 
 /* Light theme - OpenRiak light */
@@ -95,6 +103,40 @@
   --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+.theme-logo {
+  transition: filter 0.2s ease;
+}
+
+.theme-logo-bright {
+  filter: brightness(1.08) saturate(1.1);
+}
+
+.theme-toggle button[data-theme-value] {
+  color: #5a5a5a;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.theme-toggle button[data-theme-value].theme-toggle-active {
+  color: #1a1a1a;
+  background-color: #f0ede7;
+  border-color: #e0ddd6;
+}
+
+.dark .theme-toggle button[data-theme-value] {
+  color: #94a3b8;
+}
+
+.dark .theme-toggle button[data-theme-value].theme-toggle-active {
+  color: #f8fafc;
+  background-color: #334155;
+  border-color: #334155;
+}
+
 /* Scrollbar styling */
 .scrollbar-hide {
   scrollbar-width: none;
@@ -120,4 +162,100 @@
 }
 #main-content::-webkit-scrollbar-thumb:hover {
   background: #BBB;
+}
+
+.dark {
+  color-scheme: dark;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.dark .bg-white,
+.dark [class~='bg-[#FAFAF8]'],
+.dark [class~='bg-[#EEEDEA]'],
+.dark [class~='bg-[#EEECE8]'],
+.dark [class~='bg-[#F5F3EF]'],
+.dark [class~='bg-[#F0EDE7]'],
+.dark [class~='bg-[#E0DDD6]'],
+.dark [class~='bg-[#F0EFEB]'] {
+  background-color: #1f2937;
+}
+
+.dark .bg-[#FFF8E1] {
+  background-color: #422006;
+}
+
+.dark .bg-[#E8F5E9] {
+  background-color: #0f3429;
+}
+
+.dark .bg-[#E3F2FD] {
+  background-color: #12315a;
+}
+
+.dark .bg-[#FFEBEE] {
+  background-color: #3a1f22;
+}
+
+.dark .text-[#1A1A1A] {
+  color: #e2e8f0;
+}
+
+.dark .text-[#5A5A5A],
+.dark .text-[#A8A8A8],
+.dark .text-[#8A8A8A],
+.dark .text-[#A5A5A5] {
+  color: #94a3b8;
+}
+
+.dark .text-[#4A7C59] {
+  color: #34d399;
+}
+
+.dark .text-[#E69500],
+.dark .text-[#f59e0b] {
+  color: #f59e0b;
+}
+
+.dark .text-[#C75050] {
+  color: #f87171;
+}
+
+.dark .text-[#2D80D1] {
+  color: #60a5fa;
+}
+
+.dark .text-[#27d7b9] {
+  color: #2dd4bf;
+}
+
+.dark [class~='text-[#E8F8E8]'] {
+  color: #e2e8f0;
+}
+
+.dark .border-[#EEECE8],
+.dark .border-[#EEEDEA],
+.dark .border-[#F0EFEB],
+.dark .border-[#E0DDD6],
+.dark .border-[#F5F3EF] {
+  border-color: #334155;
+}
+
+.dark .border-[#C4E6C9] {
+  border-color: #166534;
+}
+
+.dark .border-[#C75050] {
+  border-color: #7f1d1d;
+}
+
+.dark #main-content {
+  scrollbar-color: #475569 transparent;
+}
+
+.dark #main-content::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark #main-content::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }

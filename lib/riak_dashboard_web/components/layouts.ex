@@ -10,14 +10,36 @@ defmodule RiakDashboardWeb.Layouts do
   use RiakDashboardWeb, :html
 
   import RiakDashboardWeb.Components.Dashboard.Shell
+  import RiakDashboardWeb.Components.Dashboard.Icons, only: [nav_icon: 1]
 
   embed_templates("layouts/*")
 
   def app(assigns) do
     ~H"""
-    <div class="flex h-screen bg-base-100 text-base-content">
-      <.sidebar active_nav={assigns[:active_nav] || "Cluster"} mobile={false} />
-      <main id="main-content" class="flex-1 overflow-y-auto p-6">
+    <div
+      id="app-shell"
+      phx-hook="SidebarShell"
+      class="relative flex min-h-screen h-screen bg-[var(--or-bg-base)] text-[var(--or-fg-base)] overflow-x-hidden transition-colors duration-200"
+    >
+      <button
+        type="button"
+        data-sidebar-open
+        aria-label="Open navigation"
+        aria-controls="sidebar"
+        class="fixed top-3 left-3 z-30 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#EEECE8] bg-white text-[#5A5A5A] shadow-sm lg:hidden dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]"
+      >
+        <.nav_icon name="hamburger" class="h-[18px] w-[18px]" />
+      </button>
+      <div
+        data-sidebar-overlay
+        data-sidebar-close
+        class="fixed inset-0 z-20 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-200 lg:hidden"
+        aria-hidden="true"
+      />
+
+      <.sidebar active_nav={assigns[:active_nav] || "Cluster"} />
+
+      <main id="main-content" class="flex-1 overflow-y-auto p-4 pt-14 sm:p-6 sm:pt-14 lg:pt-6">
         {@inner_content}
         <.flash_group flash={@flash} />
       </main>
@@ -75,18 +97,39 @@ defmodule RiakDashboardWeb.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-[33%] h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
+    <div
+      id="theme-toggle"
+      phx-hook="ThemeToggle"
+      phx-update="ignore"
+      data-theme="auto"
+      class="theme-toggle relative flex flex-row items-center border border-[#E0DDD6] bg-[#F8FAFC] dark:bg-[#1E293B] dark:border-[#334155] w-24 h-7 transition-colors duration-200 rounded-lg mx-auto"
+    >
+      <div class="absolute w-[33%] h-full rounded-lg border border-[#E0DDD6] bg-[#F0EDE7] dark:border-[#334155] dark:bg-[#334155] left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=auto]_&]:left-0 [[data-theme=dark]_&]:left-[66%] transition-[left]" />
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="flex p-2">
+      <button
+        type="button"
+        data-theme-value="auto"
+        aria-label="Use system theme"
+        class="relative z-10 flex-1 flex items-center justify-center p-1 focus:outline-none"
+      >
         <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})} class="flex p-2">
+      <button
+        type="button"
+        data-theme-value="light"
+        aria-label="Use light theme"
+        class="relative z-10 flex-1 flex items-center justify-center p-1 focus:outline-none"
+      >
         <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})} class="flex p-2">
+      <button
+        type="button"
+        data-theme-value="dark"
+        aria-label="Use dark theme"
+        class="relative z-10 flex-1 flex items-center justify-center p-1 focus:outline-none"
+      >
         <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
     </div>

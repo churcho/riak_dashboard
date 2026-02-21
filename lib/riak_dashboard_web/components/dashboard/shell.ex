@@ -13,8 +13,6 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
   import RiakDashboardWeb.Components.Dashboard.Icons
   import RiakDashboardWeb.CoreComponents, only: [icon: 1]
 
-  alias Phoenix.LiveView.JS
-
   @nav_sections [
     %{
       label: "MONITORING",
@@ -49,45 +47,25 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   attr(:active_nav, :string, required: true)
   attr(:mobile, :boolean, default: false)
-  attr(:sidebar_open, :boolean, default: false)
 
   def sidebar(assigns) do
     assigns = assign(assigns, :nav_sections, @nav_sections)
 
     ~H"""
-    <%= if @mobile do %>
-      <div
-        :if={@sidebar_open}
-        class="fixed inset-0 z-[998] bg-black/30 transition-opacity duration-250"
-        phx-click="close_sidebar"
-        aria-hidden="true"
+    <aside
+      data-sidebar
+      id="sidebar"
+      class="fixed left-0 top-0 z-40 h-full w-[260px] min-w-[260px] -translate-x-full transform-gpu transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)] border-r border-[#EEECE8] bg-[#FAFAF8] lg:static lg:z-auto lg:w-[220px] lg:min-w-[220px] lg:translate-x-0"
+      role="navigation"
+      aria-label="Main navigation"
+      aria-hidden="true"
+    >
+      <.sidebar_content
+        nav_sections={@nav_sections}
+        active_nav={@active_nav}
+        mobile={@mobile}
       />
-      <aside
-        class={[
-          "fixed top-0 left-0 bottom-0 w-[260px] z-[999] transition-transform duration-300",
-          "ease-[cubic-bezier(.16,1,.3,1)]",
-          if(@sidebar_open, do: "translate-x-0", else: "-translate-x-full")
-        ]}
-        role="navigation"
-        aria-label="Main navigation"
-      >
-        <.sidebar_content
-          nav_sections={@nav_sections}
-          active_nav={@active_nav}
-          mobile={true}
-        />
-      </aside>
-    <% else %>
-      <div class="w-[220px] min-w-[220px] h-full flex-shrink-0">
-        <aside class="w-full h-full" role="navigation" aria-label="Main navigation">
-          <.sidebar_content
-            nav_sections={@nav_sections}
-            active_nav={@active_nav}
-            mobile={false}
-          />
-        </aside>
-      </div>
-    <% end %>
+    </aside>
     """
   end
 
@@ -97,43 +75,46 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   defp sidebar_content(assigns) do
     ~H"""
-    <div class="w-full h-full flex flex-col text-[13px] font-sans bg-[#FAFAF8] border-r border-[#EEECE8]">
+    <div class="w-full h-full flex flex-col text-[13px] font-sans bg-[#FAFAF8] border-r border-[#EEECE8] transition-colors duration-200 dark:bg-[#1E293B] dark:border-[#334155]">
       <%!-- Logo --%>
-      <div class="px-[18px] pt-5 pb-2.5 flex items-center justify-between">
+      <div class="px-[18px] pt-6 pb-4 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2 no-underline">
           <img
             src="/images/openriak_dashboard_logo.svg"
             alt="riak-dashboard"
-            class="h-7"
+            class="theme-logo h-14 w-auto max-w-[178px] object-contain transition-all duration-200"
+            data-theme-image
           />
         </a>
-        <%= if @mobile do %>
-          <button
-            phx-click="close_sidebar"
-            class="bg-transparent border-none cursor-pointer p-1 flex text-[#5A5A5A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117] rounded"
-            aria-label="Close navigation"
-          >
-            <.nav_icon name="close" />
-          </button>
-        <% end %>
+        <button
+          type="button"
+          data-sidebar-close
+          class="bg-transparent border-none cursor-pointer p-1 flex text-[#5A5A5A] hover:text-[#1A1A1A] lg:hidden dark:text-[#94A3B8] dark:hover:text-[#E2E8F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117] rounded transition-colors duration-200"
+          aria-label="Close navigation"
+        >
+          <.nav_icon name="close" />
+        </button>
       </div>
 
       <%!-- Navigation --%>
       <nav class="flex-1 overflow-y-auto px-2.5 scrollbar-hide" aria-label="Dashboard sections">
         <div :for={section <- @nav_sections}>
-          <div class="px-2 pt-3.5 pb-1.5 text-[10px] font-semibold tracking-[1.2px] uppercase text-[#A8A8A8]">
+          <div class="px-2 pt-3.5 pb-1.5 text-[10px] font-semibold tracking-[1.2px] uppercase text-[#A8A8A8] dark:text-[#94A3B8]">
             {section.label}
           </div>
           <.link
             :for={item <- section.items}
             navigate={item.path}
+            data-sidebar-link
+            data-sidebar-close
             class={[
               "flex items-center gap-[9px] w-full py-[7px] px-2.5 rounded-lg text-[13px] no-underline transition-all duration-150 mb-px",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]",
               if(@active_nav == item.name,
-                do: "border border-[#E0DDD6] bg-[#F0EDE7] text-[#1A1A1A] font-semibold",
+                do:
+                  "border border-[#E0DDD6] bg-[#F0EDE7] text-[#1A1A1A] font-semibold dark:border-[#334155] dark:bg-[#334155] dark:text-[#F8FAFC]",
                 else:
-                  "border border-transparent bg-transparent text-[#5A5A5A] font-normal hover:bg-[#F5F3EF]"
+                  "border border-transparent bg-transparent text-[#5A5A5A] font-normal hover:bg-[#F5F3EF] dark:text-[#94A3B8] dark:hover:bg-[#243447]"
               )
             ]}
           >
@@ -154,7 +135,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
       </nav>
 
       <%!-- Bottom section --%>
-      <div class="px-2.5 pb-3 pt-2 border-t border-[#EEECE8]">
+      <div class="px-2.5 pb-3 pt-2 border-t border-[#EEECE8] dark:border-[#334155]">
         <.theme_toggle />
       </div>
     </div>
@@ -165,18 +146,39 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   defp theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-[33%] h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
+    <div
+      id="theme-toggle"
+      phx-hook="ThemeToggle"
+      phx-update="ignore"
+      data-theme="auto"
+      class="theme-toggle relative flex flex-row items-center border border-[#E0DDD6] bg-[#F8FAFC] dark:bg-[#1E293B] dark:border-[#334155] w-24 h-7 transition-colors duration-200 rounded-lg mx-auto"
+    >
+      <div class="absolute w-[33%] h-full rounded-lg border border-[#E0DDD6] bg-[#F0EDE7] dark:border-[#334155] dark:bg-[#334155] left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=auto]_&]:left-0 [[data-theme=dark]_&]:left-[66%] transition-[left]" />
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="flex p-2">
+      <button
+        type="button"
+        data-theme-value="auto"
+        aria-label="Use system theme"
+        class="relative z-10 flex-1 flex items-center justify-center p-1 focus:outline-none"
+      >
         <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})} class="flex p-2">
+      <button
+        type="button"
+        data-theme-value="light"
+        aria-label="Use light theme"
+        class="relative z-10 flex-1 flex items-center justify-center p-1 focus:outline-none"
+      >
         <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})} class="flex p-2">
+      <button
+        type="button"
+        data-theme-value="dark"
+        aria-label="Use dark theme"
+        class="relative z-10 flex-1 flex items-center justify-center p-1 focus:outline-none"
+      >
         <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
     </div>
@@ -194,14 +196,14 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
       <div class="flex items-center gap-2.5">
         <button
           :if={@mobile}
-          phx-click="open_sidebar"
-          class="w-9 h-9 rounded-lg cursor-pointer flex items-center justify-center flex-shrink-0 border border-[#EEECE8] bg-white text-[#5A5A5A] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]"
+          data-sidebar-open
+          class="w-9 h-9 rounded-lg cursor-pointer flex items-center justify-center flex-shrink-0 border border-[#EEECE8] bg-white text-[#5A5A5A] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]"
           aria-label="Open navigation menu"
         >
           <.nav_icon name="hamburger" />
         </button>
         <h1 class={[
-          "font-bold tracking-tight text-[#1A1A1A]",
+          "font-bold tracking-tight text-[#1A1A1A] dark:text-[#E2E8F0]",
           if(@mobile, do: "text-[22px]", else: "text-[26px]")
         ]}>
           {@page_title}

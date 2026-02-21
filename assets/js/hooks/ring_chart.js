@@ -3,11 +3,18 @@ const RingChart = {
   mounted() {
     this.canvas = this.el.querySelector("canvas");
     this.ctx = this.canvas.getContext("2d");
+    this.handleThemeChanged = () => this.draw();
+
+    window.addEventListener("riak:theme-changed", this.handleThemeChanged);
     this.draw();
   },
 
   updated() {
     this.draw();
+  },
+
+  destroyed() {
+    window.removeEventListener("riak:theme-changed", this.handleThemeChanged);
   },
 
   draw() {
@@ -51,21 +58,26 @@ const RingChart = {
       this.ctx.fill();
     });
 
+    const isDark = document.documentElement.classList.contains("dark");
+    const innerBg = isDark ? "#1F2937" : "#FAFAF8";
+    const centerText = isDark ? "#E2E8F0" : "#1A1A1A";
+    const subtitleText = isDark ? "#94A3B8" : "#8A8A8A";
+
     // Draw inner circle (hole for donut effect)
     const innerR = r * 0.6;
     this.ctx.beginPath();
     this.ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
-    this.ctx.fillStyle = '#FAFAF8';
+    this.ctx.fillStyle = innerBg;
     this.ctx.fill();
 
     // Draw center text
-    this.ctx.fillStyle = '#1A1A1A';
+    this.ctx.fillStyle = centerText;
     this.ctx.font = "bold 24px 'DM Sans', sans-serif";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(partitions.length, cx, cy - 10);
     this.ctx.font = "12px 'DM Sans', sans-serif";
-    this.ctx.fillStyle = '#8A8A8A';
+    this.ctx.fillStyle = subtitleText;
     this.ctx.fillText("partitions", cx, cy + 12);
   }
 };

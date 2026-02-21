@@ -4,6 +4,58 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <script>
+      (function () {
+        const html = document.documentElement;
+        const key = "riak-dashboard-theme";
+        const brightLogoClass = "theme-logo-bright";
+
+        const normalize = value => {
+          return value === "dark" || value === "light" || value === "auto" ? value : "auto";
+        };
+
+        const applyLogo = isDark => {
+          const lightLogo = "/images/openriak_dashboard_logo.svg";
+          const darkLogo = "/images/openriak_dashboard_logo_dark.svg";
+          document.querySelectorAll("[data-theme-image]").forEach((logo) => {
+            logo.setAttribute("src", isDark ? darkLogo : lightLogo);
+            logo.classList.toggle(brightLogoClass, !isDark);
+          });
+        };
+
+        const applyTheme = value => {
+          if (value === "dark") {
+            html.classList.add("dark");
+            applyLogo(true);
+            return;
+          }
+
+          if (value === "light") {
+            html.classList.remove("dark");
+            applyLogo(false);
+            return;
+          }
+
+          const wantsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          html.classList.toggle("dark", wantsDark);
+          applyLogo(wantsDark);
+        };
+
+        let theme = "auto";
+        try {
+          const storedTheme = localStorage.getItem(key);
+          theme = normalize(storedTheme);
+        } catch (_e) {
+          theme = "auto";
+        }
+
+        applyTheme(theme);
+        html.classList.add("no-transition");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => html.classList.remove("no-transition"));
+        });
+      })();
+    </script>
     <.live_title default="riak-dashboard">
       {assigns[:page_title]}
     </.live_title>
@@ -17,7 +69,7 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
   </head>
-  <body class="h-full m-0 p-0 font-sans">
+  <body class="h-full m-0 p-0 font-sans bg-[var(--or-bg-base)] text-[var(--or-fg-base)] transition-colors duration-200">
     {@inner_content}
   </body>
 </html>
