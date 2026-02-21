@@ -8,7 +8,7 @@ A web UI for managing and monitoring [OpenRiak](https://github.com/OpenRiak) clu
 
 The dashboard connects to a Riak node's Admin API over HTTP and (optionally) its WebSocket event stream. It gives you:
 
-**Cluster monitoring** -- cluster status, ring ownership visualization, per-node Erlang VM and KV metrics, handoff transfers, AAE exchange tracking. Pages that support WebSocket update in real time; without a WebSocket URL configured, they show a "Not Connected" indicator and wait for data.
+**Cluster monitoring** -- consolidated cluster dashboard with summary cards, ring partition distribution bar, per-node stat cards (memory, processes, gets, puts), interactive area chart with 7 switchable metrics, AAE exchange and handoff counters. Updates in real time over WebSocket; without a WebSocket URL configured, pages show a "Not Connected" indicator and wait for data.
 
 **Data browser** -- list buckets (with optional bucket type), browse keys, read/write/delete objects, inspect and edit bucket properties and bucket type properties.
 
@@ -95,7 +95,7 @@ Browser
   |                      |
   |                    BasicAuth plug
   |                      |
-  |                    LiveView (15 pages)
+  |                    LiveView (12 pages)
   |                      |
   |                    Client behaviour -- HttpClient (Req) --> Riak Admin API (:8099)
   |
@@ -104,11 +104,11 @@ Browser
                        pushes events back to LiveView
 ```
 
-The dashboard is stateless -- it doesn't store anything itself. Every page either calls the Riak Admin API on demand (bucket operations, queries) or receives real-time updates over WebSocket (cluster status, ring, handoff, AAE).
+Most of the dashboard is stateless -- pages call the Riak Admin API on demand (bucket operations, queries) or receive real-time updates over WebSocket (cluster status, ring, handoff, AAE). The one exception is the `MetricStore` GenServer, which persists per-node metric history to a DETS file at `priv/data/metric_store.dets`. It stores four tiers of downsampled data (recent 5 min, hourly, daily, weekly) so the metric chart survives restarts.
 
 **Client behaviour:** `RiakDashboard.Cluster.Client` defines callbacks for every Riak API endpoint. `HttpClient` is the real implementation using the `Req` HTTP library with a 5-second timeout and no retries. In tests, `Mox` stubs the behaviour so nothing hits the network.
 
-**Real-time updates:** Five pages (cluster, ring, node detail, handoff, AAE) mount a `RiakEvents` JavaScript hook that opens a WebSocket to Riak's event stream. The hook subscribes to topics and pushes incoming events into the LiveView as `handle_event` calls. If no `RIAK_WS_URL` is configured, these pages show a "Not Connected" badge.
+**Real-time updates:** The cluster dashboard and node detail pages mount a `RiakEvents` JavaScript hook that opens a WebSocket to Riak's event stream. The hook subscribes to topics (cluster, node_stats, ring, aae, handoff) and pushes incoming events into the LiveView as `handle_event` calls. If no `RIAK_WS_URL` is configured, these pages show a "Not Connected" badge. Ring, AAE, and handoff data that previously had standalone pages is now consolidated into the cluster dashboard.
 
 A full architecture diagram is at [docs/architecture/system-overview.excalidraw](docs/architecture/system-overview.excalidraw) (open with [excalidraw.com](https://excalidraw.com) or the VS Code extension).
 
@@ -116,11 +116,8 @@ A full architecture diagram is at [docs/architecture/system-overview.excalidraw]
 
 | Path | Page | What it shows |
 |------|------|---------------|
-| `/` | Cluster overview | Cluster name, ring size, node count, node table with stats |
-| `/ring` | Ring ownership | Donut chart of partition distribution, per-node breakdown |
+| `/` | Cluster dashboard | Summary cards, ring distribution bar, per-node stat cards, interactive metric chart, AAE/handoff counters |
 | `/nodes/:node` | Node detail | Erlang VM stats (memory, processes, run queue), KV metrics (gets, puts, latency) |
-| `/handoff` | Handoff | Active transfer count and details |
-| `/aae` | AAE | Active Anti-Entropy exchange status |
 | `/buckets` | Bucket browser | List all buckets, link to keys and properties |
 | `/buckets/:b/keys` | Key browser | List keys in a bucket, create new objects |
 | `/buckets/:b/keys/:k` | Object detail | View/edit/delete an object, see metadata (vclock, etag, content-type) |
@@ -141,7 +138,7 @@ All bucket routes also work with typed buckets: `/types/:type/buckets/:bucket/..
 Tests use [Mox](https://github.com/dashbitco/mox) to stub the `Client` behaviour. No Riak connection needed.
 
 ```bash
-mix test                        # run all 62 tests
+mix test                        # run all tests
 mix test --cover                # with coverage
 mix credo --strict              # code quality
 mix sobelow                     # security scan
@@ -187,6 +184,7 @@ The dev server live-reloads Elixir code and rebuilds CSS/JS on file changes. Tai
 lib/
   riak_dashboard/
     application.ex              # supervision tree
+    metric_store.ex             # per-node metric history (DETS-backed)
     cluster/
       client.ex                 # behaviour (API contract)
       http_client.ex            # Req-based implementation
@@ -194,13 +192,14 @@ lib/
     router.ex                   # all routes
     endpoint.ex                 # HTTP server config
     plugs/basic_auth.ex         # authentication
-    live/                       # 15 LiveView modules
+    live/                       # 12 LiveView modules
     components/dashboard/       # reusable UI components
     formatters.ex               # value display helpers
 assets/
   js/hooks/
     riak_events.js              # WebSocket client hook
-    ring_chart.js               # canvas ring visualization
+    metric_chart.js             # interactive chart tooltip/crosshair
+    choices_select.js           # enhanced select dropdown
   css/app.css                   # Tailwind 4 + daisyUI
 test/
   support/

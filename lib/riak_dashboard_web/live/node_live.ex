@@ -65,13 +65,7 @@ defmodule RiakDashboardWeb.NodeLive do
       data-ws-url={@ws_url}
       data-topics={@topics_json}
     >
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
-            {@node_name}
-          </h1>
-          <p class="text-sm mt-1 text-[#8A8A8A]">Node Detail</p>
-        </div>
+      <div class="flex items-center justify-end flex-wrap gap-3 mb-6">
         <.connection_indicator status={@ws_status} />
       </div>
 

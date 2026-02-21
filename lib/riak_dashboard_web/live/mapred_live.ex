@@ -62,10 +62,6 @@ defmodule RiakDashboardWeb.MapredLive do
   def render(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold mb-6 text-[#1A1A1A]">
-        MapReduce Query
-      </h1>
-
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <%!-- Query input panel --%>
         <div class="bg-white rounded-xl border border-[#EEEDEA] p-4">

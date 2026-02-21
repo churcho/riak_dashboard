@@ -175,10 +175,7 @@ defmodule RiakDashboardWeb.ObjectLive do
         <span class="text-[#1A1A1A] font-medium">{@key}</span>
       </nav>
 
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
-          {@key}
-        </h1>
+      <div class="flex items-center justify-end flex-wrap gap-3 mb-6">
         <div class="flex items-center gap-2">
           <button
             phx-click="toggle_edit"

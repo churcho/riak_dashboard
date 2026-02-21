@@ -412,6 +412,171 @@ defmodule RiakDashboardWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders a badge/pill with consistent rectangular shape and semantic color.
+
+  ## Variants
+
+    * `:success` - Green for positive states (valid, OK, healthy)
+    * `:warning` - Orange/amber for caution states (pending, joining)
+    * `:error` - Red for error/destructive states (down, unreachable)
+    * `:info` - Blue for informational states
+    * `:neutral` - Default muted style
+
+  ## Examples
+
+      <.badge variant={:success}>OK</.badge>
+      <.badge variant={:warning}>Pending</.badge>
+      <.badge variant={:info} indicator>Live</.badge>
+  """
+  attr(:variant, :atom, default: :neutral, values: [:success, :warning, :error, :info, :neutral])
+  attr(:indicator, :boolean, default: false)
+  attr(:class, :string, default: "")
+  slot(:inner_block, required: true)
+
+  def badge(assigns) do
+    ~H"""
+    <span class={[
+      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold",
+      badge_colors(@variant),
+      @class
+    ]}>
+      <span :if={@indicator} class={["w-2 h-2 rounded-full", indicator_color(@variant)]} />
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  defp badge_colors(:success),
+    do:
+      "text-[#4A7C59] bg-[#E8F5E9] border border-[#C4E6C9] dark:text-[#34D399] dark:bg-[#0f3429] dark:border-[#166534]"
+
+  defp badge_colors(:warning),
+    do:
+      "text-[#E69500] bg-[#FFF8E1] border border-[#FFE0B2] dark:text-[#f59e0b] dark:bg-[#422006] dark:border-[#92400e]"
+
+  defp badge_colors(:error),
+    do:
+      "text-[#C75050] bg-[#FFEBEE] border border-[#FFCDD2] dark:text-[#f87171] dark:bg-[#3a1f22] dark:border-[#7f1d1d]"
+
+  defp badge_colors(:info),
+    do:
+      "text-[#2D80D1] bg-[#E3F2FD] border border-[#BBDEFB] dark:text-[#60A5FA] dark:bg-[#12315a] dark:border-[#1e3a5f]"
+
+  defp badge_colors(:neutral),
+    do:
+      "text-[#5A5A5A] bg-[#F0EFEB] border border-[#E0DDD6] dark:text-[#94A3B8] dark:bg-[#334155] dark:border-[#475569]"
+
+  defp indicator_color(:success), do: "bg-green-500 animate-pulse"
+  defp indicator_color(:warning), do: "bg-amber-500"
+  defp indicator_color(:error), do: "bg-red-500"
+  defp indicator_color(:info), do: "bg-blue-500"
+  defp indicator_color(:neutral), do: "bg-gray-400"
+
+  @doc """
+  Generic modal dialog container for confirmations and alerts.
+
+  ## Example
+
+      <.dialog_modal
+        id="delete-modal"
+        show={@show_delete_modal}
+        title="Delete item?"
+        message="This action cannot be undone."
+        variant={:error}
+        on_cancel="close_delete_modal"
+      >
+        <:actions>
+          <button phx-click="confirm_delete">Delete</button>
+          <button phx-click="close_delete_modal">Cancel</button>
+        </:actions>
+      </.dialog_modal>
+  """
+  attr :id, :string, required: true
+  attr :show, :boolean, default: false
+  attr :title, :string, required: true
+  attr :message, :string, required: true
+  attr :variant, :atom, default: :error, values: [:error, :success, :info]
+  attr :on_cancel, :string, default: nil
+  attr :show_close, :boolean, default: true
+  attr :class, :string, default: nil
+
+  slot :actions, required: true
+
+  def dialog_modal(assigns) do
+    ~H"""
+    <div
+      :if={@show}
+      id={@id}
+      class={["fixed inset-0 z-50", @class]}
+      aria-labelledby={"#{@id}-title"}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        class="fixed inset-0 bg-black/50 transition-opacity duration-200"
+        phx-click={@on_cancel}
+      />
+
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div
+            phx-mounted={
+              JS.remove_class("opacity-0 translate-y-3 sm:translate-y-0 sm:scale-95", time: 200)
+            }
+            class="relative w-full max-w-lg transform overflow-hidden rounded-lg border border-[#EEEDEA] bg-white px-4 pt-5 pb-4 text-left shadow-xl opacity-0 translate-y-3 transition-all duration-200 sm:p-6 sm:my-8 dark:border-[#334155] dark:bg-[var(--or-bg-surface)] dark:text-[var(--or-fg-base)]"
+          >
+            <button
+              :if={@show_close and @on_cancel}
+              type="button"
+              phx-click={@on_cancel}
+              class="absolute top-3 right-3 rounded-md p-1 text-[#9CA3AF] hover:text-[#6B7280] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117] dark:text-[#94A3B8] dark:hover:text-[#CBD5E1]"
+            >
+              <span class="sr-only">Close</span>
+              <.icon name="hero-x-mark-mini" class="size-4" />
+            </button>
+
+            <div class="sm:flex sm:items-start">
+              <div class={[
+                "mx-auto flex size-12 shrink-0 items-center justify-center rounded-full sm:mx-0 sm:size-10",
+                modal_icon_bg(@variant)
+              ]}>
+                <.icon name={modal_icon(@variant)} class={"size-6 #{modal_icon_fg(@variant)}"} />
+              </div>
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3
+                  id={"#{@id}-title"}
+                  class="text-base font-semibold text-[#111827] dark:text-[#E2E8F0]"
+                >
+                  {@title}
+                </h3>
+                <p class="mt-2 text-sm text-[#6B7280] dark:text-[#94A3B8]">
+                  {@message}
+                </p>
+              </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-3">
+              {render_slot(@actions)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp modal_icon(:error), do: "hero-exclamation-triangle"
+  defp modal_icon(:success), do: "hero-check"
+  defp modal_icon(:info), do: "hero-information-circle"
+
+  defp modal_icon_bg(:error), do: "bg-[#FEE2E2] dark:bg-[#3f1313]"
+  defp modal_icon_bg(:success), do: "bg-[#DCFCE7] dark:bg-[#133526]"
+  defp modal_icon_bg(:info), do: "bg-[#DBEAFE] dark:bg-[#102a52]"
+
+  defp modal_icon_fg(:error), do: "text-[#DC2626] dark:text-[#FCA5A5]"
+  defp modal_icon_fg(:success), do: "text-[#16A34A] dark:text-[#86EFAC]"
+  defp modal_icon_fg(:info), do: "text-[#2563EB] dark:text-[#93C5FD]"
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

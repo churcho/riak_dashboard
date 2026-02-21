@@ -11,6 +11,7 @@ defmodule RiakDashboard.Application do
       RiakDashboardWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:riak_dashboard, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: RiakDashboard.PubSub},
+      RiakDashboard.MetricStore,
       # Start a worker by calling: RiakDashboard.Worker.start_link(arg)
       # {RiakDashboard.Worker, arg},
       # Start to serve requests, typically the last entry

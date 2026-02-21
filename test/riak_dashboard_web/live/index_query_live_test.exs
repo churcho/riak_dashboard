@@ -8,7 +8,7 @@ defmodule RiakDashboardWeb.IndexQueryLiveTest do
   test "renders index query page", %{conn: conn} do
     conn = put_req_header(conn, "authorization", @auth_header)
     {:ok, _view, html} = live(conn, "/query/index")
-    assert html =~ "Secondary Index Query"
+    assert html =~ "Index Query"
   end
 
   test "runs an exact match query and displays results", %{conn: conn} do

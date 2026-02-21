@@ -23,10 +23,7 @@ defmodule RiakDashboardWeb.Router do
 
     live("/", ClusterLive, :index)
     live("/nodes", ClusterLive, :index)
-    live("/ring", RingLive, :index)
     live("/nodes/:node", NodeLive, :show)
-    live("/handoff", HandoffLive, :index)
-    live("/aae", AaeLive, :index)
     live("/buckets", BucketsLive, :index)
     live("/types/:type/buckets", BucketsLive, :index)
     live("/buckets/:bucket/keys", KeysLive, :index)
@@ -44,6 +41,10 @@ defmodule RiakDashboardWeb.Router do
     live("/query/index", IndexQueryLive, :index)
     live("/types", TypePropsLive, :index)
     live("/types/:type/props", TypePropsLive, :show)
+
+    get("/ring", PageController, :redirect_to_cluster)
+    get("/aae", PageController, :redirect_to_cluster)
+    get("/handoff", PageController, :redirect_to_cluster)
   end
 
   # Other scopes may use custom stacks.

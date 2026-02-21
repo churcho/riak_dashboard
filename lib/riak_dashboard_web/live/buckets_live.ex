@@ -66,10 +66,6 @@ defmodule RiakDashboardWeb.BucketsLive do
   def render(assigns) do
     ~H"""
     <div>
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">Buckets</h1>
-      </div>
-
       <%!-- Controls --%>
       <div class="flex items-center gap-3 mb-4">
         <div class="flex items-center gap-2">

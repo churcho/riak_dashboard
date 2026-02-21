@@ -132,10 +132,6 @@ defmodule RiakDashboardWeb.CounterLive do
   def render(%{live_action: :index} = assigns) do
     ~H"""
     <div>
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">Counters</h1>
-      </div>
-
       <div class="bg-white rounded-xl border border-[#EEEDEA] p-4">
         <h2 class="text-sm font-semibold mb-3 text-[#8A8A8A]">Open Counter</h2>
         <form phx-submit="open_counter" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -178,12 +174,6 @@ defmodule RiakDashboardWeb.CounterLive do
         <span>/</span>
         <span class="text-[#1A1A1A] font-medium">{@key}</span>
       </nav>
-
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
-          {@key}
-        </h1>
-      </div>
 
       <.error_banner :if={@error} message={@error} />
 

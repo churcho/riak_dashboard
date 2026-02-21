@@ -10,6 +10,8 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   use Phoenix.Component
 
+  import RiakDashboardWeb.Components.Dashboard.ChoicesSelect
+  import RiakDashboardWeb.Components.Dashboard.Connection
   import RiakDashboardWeb.Components.Dashboard.Icons
   import RiakDashboardWeb.CoreComponents, only: [icon: 1]
 
@@ -17,11 +19,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
     %{
       label: "MONITORING",
       items: [
-        %{name: "Cluster", icon: "dashboard", path: "/"},
-        %{name: "Ring", icon: "ring", path: "/ring"},
-        %{name: "Nodes", icon: "server", path: "/nodes"},
-        %{name: "Handoff", icon: "transfer", path: "/handoff"},
-        %{name: "AAE", icon: "shield", path: "/aae"}
+        %{name: "Nodes", icon: "server", path: "/nodes"}
       ]
     },
     %{
@@ -47,6 +45,8 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   attr(:active_nav, :string, required: true)
   attr(:mobile, :boolean, default: false)
+  attr(:cluster_name, :string, default: nil)
+  attr(:remote_dcs, :list, default: [])
 
   def sidebar(assigns) do
     assigns = assign(assigns, :nav_sections, @nav_sections)
@@ -64,6 +64,8 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
         nav_sections={@nav_sections}
         active_nav={@active_nav}
         mobile={@mobile}
+        cluster_name={@cluster_name}
+        remote_dcs={@remote_dcs}
       />
     </aside>
     """
@@ -72,17 +74,19 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
   attr(:nav_sections, :list, required: true)
   attr(:active_nav, :string, required: true)
   attr(:mobile, :boolean, default: false)
+  attr(:cluster_name, :string, default: nil)
+  attr(:remote_dcs, :list, default: [])
 
   defp sidebar_content(assigns) do
     ~H"""
     <div class="w-full h-full flex flex-col text-[13px] font-sans bg-[#FAFAF8] border-r border-[#EEECE8] transition-colors duration-200 dark:bg-[#1E293B] dark:border-[#334155]">
       <%!-- Logo --%>
-      <div class="px-[18px] pt-6 pb-4 flex items-center justify-between">
+      <div class="px-2.5 pt-6 pb-4 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2 no-underline">
           <img
             src="/images/openriak_dashboard_logo.svg"
             alt="riak-dashboard"
-            class="theme-logo h-14 w-auto max-w-[178px] object-contain transition-all duration-200"
+            class="theme-logo h-auto w-full max-w-[250px] object-contain transition-all duration-200"
             data-theme-image
           />
         </a>
@@ -96,8 +100,42 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
         </button>
       </div>
 
+      <%!-- Cluster Selector --%>
+      <div :if={@cluster_name} class="px-2.5 pb-2">
+        <div class="flex items-center gap-2 px-2.5 py-1 mb-1">
+          <span class="flex flex-shrink-0">
+            <.nav_icon name="dashboard" />
+          </span>
+          <span class="text-[10px] font-semibold tracking-[1.2px] uppercase text-[#A8A8A8] dark:text-[#94A3B8]">
+            Cluster
+          </span>
+        </div>
+        <%= if @remote_dcs != [] do %>
+          <.choices_select
+            id="cluster-selector"
+            options={build_cluster_options(@cluster_name, @remote_dcs)}
+            selected={@cluster_name}
+            event="select_cluster"
+            value_key="name"
+            compact
+            search_enabled={length(@remote_dcs) > 3}
+            placeholder="Select cluster..."
+          />
+        <% else %>
+          <div
+            class="px-2.5 py-1.5 text-[12px] font-semibold font-mono text-[#e77117] dark:text-[#e77117] truncate"
+            title={@cluster_name}
+          >
+            {@cluster_name}
+          </div>
+        <% end %>
+      </div>
+
       <%!-- Navigation --%>
-      <nav class="flex-1 overflow-y-auto px-2.5 scrollbar-hide" aria-label="Dashboard sections">
+      <nav
+        class="flex-1 overflow-y-auto px-2.5 scrollbar-hide font-heading"
+        aria-label="Dashboard sections"
+      >
         <div :for={section <- @nav_sections}>
           <div class="px-2 pt-3.5 pb-1.5 text-[10px] font-semibold tracking-[1.2px] uppercase text-[#A8A8A8] dark:text-[#94A3B8]">
             {section.label}
@@ -187,29 +225,50 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   # -- Header --
 
-  attr(:page_title, :string, required: true)
-  attr(:mobile, :boolean, default: false)
+  @nav_section_map for(
+                     section <- @nav_sections,
+                     item <- section.items,
+                     into: %{},
+                     do: {item.name, section.label}
+                   )
+                   |> Map.put("Cluster", "MONITORING")
 
-  def dashboard_header(assigns) do
+  attr(:active_nav, :string, default: nil)
+  attr(:page_title, :string, default: nil)
+  attr(:ws_status, :atom, default: nil)
+  slot(:header_right)
+
+  def breadcrumb_header(assigns) do
+    section = Map.get(@nav_section_map, assigns.active_nav || assigns.page_title)
+    assigns = assign(assigns, :section, section)
+
     ~H"""
-    <header class="flex justify-between items-center gap-3 mb-6">
-      <div class="flex items-center gap-2.5">
-        <button
-          :if={@mobile}
-          data-sidebar-open
-          class="w-9 h-9 rounded-lg cursor-pointer flex items-center justify-center flex-shrink-0 border border-[#EEECE8] bg-white text-[#5A5A5A] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77117]"
-          aria-label="Open navigation menu"
-        >
-          <.nav_icon name="hamburger" />
-        </button>
-        <h1 class={[
-          "font-bold tracking-tight text-[#1A1A1A] dark:text-[#E2E8F0]",
-          if(@mobile, do: "text-[22px]", else: "text-[26px]")
-        ]}>
+    <header class="sticky -top-4 sm:-top-6 lg:-top-6 z-10 flex items-center justify-between gap-3 pb-3 pt-4 sm:pt-6 lg:pt-6 mb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b border-[#EEEDEA] bg-[var(--or-bg-base)] dark:border-[#334155]">
+      <nav class="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+        <span :if={@section} class="text-[#A5A5A5] dark:text-[#6B7280]">
+          {humanize_section(@section)}
+        </span>
+        <span :if={@section} class="text-[#C5C5C5] dark:text-[#4B5563]">/</span>
+        <span class="font-semibold font-heading text-[#1A1A1A] dark:text-[#E2E8F0]">
           {@page_title}
-        </h1>
+        </span>
+      </nav>
+      <div class="flex items-center gap-2">
+        <.connection_indicator :if={@ws_status} status={@ws_status} />
+        {render_slot(@header_right)}
       </div>
     </header>
     """
+  end
+
+  defp humanize_section("MONITORING"), do: "Monitoring"
+  defp humanize_section("DATA"), do: "Data"
+  defp humanize_section("SETTINGS"), do: "Settings"
+  defp humanize_section(_), do: nil
+
+  defp build_cluster_options(cluster_name, remote_dcs) do
+    current = [%{value: cluster_name, label: cluster_name}]
+    remotes = Enum.map(remote_dcs, fn dc -> %{value: dc["name"], label: dc["name"]} end)
+    current ++ remotes
   end
 end
