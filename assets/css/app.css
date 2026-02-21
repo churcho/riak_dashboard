@@ -284,6 +284,27 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--or-shadow-md);
 }
 
+/* Metric chart tooltip */
+.metric-chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: #1A1A1A;
+  color: #FAFAF8;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.dark .metric-chart-tooltip {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
 /* Dashboard micro-interactions */
 @keyframes icon-breathe {
   0%, 100% { opacity: 1; transform: scale(1); }

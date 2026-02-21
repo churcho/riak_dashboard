@@ -2,21 +2,32 @@ defmodule RiakDashboardWeb.ClusterLive do
   use RiakDashboardWeb, :live_view
 
   import RiakDashboardWeb.Components.Dashboard.Cards
-  import RiakDashboardWeb.Components.Dashboard.Connection
   import RiakDashboardWeb.Components.Dashboard.Feedback
+  import RiakDashboardWeb.Components.Dashboard.MetricChart
   import RiakDashboardWeb.Components.Dashboard.NodeChips
-  import RiakDashboardWeb.Components.Dashboard.NodePerformance
-  import RiakDashboardWeb.Components.Dashboard.RingPanel
 
   @sparkline_max_points 30
   @node_color_palette [
-    "#e77117",
-    "#63819b",
-    "#27d7b9",
-    "#2d80d1",
-    "#d12d2d",
-    "#e39e1b",
-    "#2cd284"
+    "#c2185b",
+    "#1565c0",
+    "#2e7d32",
+    "#f9a825",
+    "#6a1b9a",
+    "#00838f",
+    "#d84315",
+    "#00897b",
+    "#5c6bc0",
+    "#f4511e",
+    "#8e24aa",
+    "#039be5",
+    "#7cb342",
+    "#ffb300",
+    "#e53935",
+    "#3949ab",
+    "#43a047",
+    "#fb8c00",
+    "#d81b60",
+    "#00acc1"
   ]
 
   @impl true
@@ -39,6 +50,7 @@ defmodule RiakDashboardWeb.ClusterLive do
         handoff_count: 0,
         selected_node: nil,
         sparkline_history: %{},
+        selected_metric: "memory",
         loading: true,
         error: nil,
         topics_json: Jason.encode!(~w(cluster node_stats ring aae handoff))
@@ -86,7 +98,7 @@ defmodule RiakDashboardWeb.ClusterLive do
      assign(socket,
        cluster: data,
        loading: false,
-       cluster_name: data["cluster_name"],
+       cluster_name: sanitize_cluster_name(data["cluster_name"]),
        remote_dcs: data["remote_dcs"] || [],
        selected_node: selected
      )}
@@ -151,7 +163,44 @@ defmodule RiakDashboardWeb.ClusterLive do
     {:noreply, assign(socket, selected_node: node_name)}
   end
 
+  def handle_event("select_metric", %{"metric" => key}, socket) do
+    {:noreply, assign(socket, selected_metric: key)}
+  end
+
   # Private helpers
+
+  defp metric_unit("memory"), do: "MB"
+  defp metric_unit("get_latency"), do: "\u00B5s"
+  defp metric_unit("put_latency"), do: "\u00B5s"
+  defp metric_unit(_), do: ""
+
+  defp chart_data_for(sparkline_history, node, metric_key) do
+    sparkline_history
+    |> Map.get(node, [])
+    |> Enum.map(&Map.get(&1, String.to_existing_atom(metric_key), 0))
+  end
+
+  defp ring_balanced?([]), do: true
+
+  defp ring_balanced?(node_dist) do
+    counts = Enum.map(node_dist, & &1.count)
+    Enum.max(counts) - Enum.min(counts) <= 1
+  end
+
+  defp short_node_name(nil), do: "-"
+
+  defp short_node_name(name) when is_binary(name) do
+    name |> String.split("@") |> hd()
+  end
+
+  defp sanitize_cluster_name(nil), do: nil
+
+  defp sanitize_cluster_name(name) when is_binary(name) do
+    case Regex.run(~r/\{'([^']+)'/, name) do
+      [_, node_name] -> node_name
+      _ -> name
+    end
+  end
 
   defp derive_ws_url(admin_url) do
     admin_url
@@ -164,20 +213,43 @@ defmodule RiakDashboardWeb.ClusterLive do
   defp node_distribution(ring) do
     counts = Enum.frequencies_by(ring["partitions"], & &1["node"])
     total = length(ring["partitions"])
-    colors = ring["node_colors"]
+    palette_size = length(@node_color_palette)
 
     counts
     |> Enum.sort_by(fn {node, _count} -> node end)
-    |> Enum.map(fn {node, count} ->
-      color_idx = Map.get(colors, node, 0)
+    |> Enum.with_index()
+    |> Enum.map(fn {{node, count}, idx} ->
+      color_idx = rem(node_color_hash(node) + idx, palette_size)
 
       %{
         node: node,
-        color: Enum.at(@node_color_palette, rem(color_idx, length(@node_color_palette))),
+        color: Enum.at(@node_color_palette, color_idx),
         count: count,
         pct: Float.round(count / total * 100, 1)
       }
     end)
+    |> dedup_adjacent_colors()
+  end
+
+  defp node_color_hash(node_name) do
+    :erlang.phash2(node_name, length(@node_color_palette))
+  end
+
+  defp dedup_adjacent_colors(dists) do
+    palette_size = length(@node_color_palette)
+
+    dists
+    |> Enum.reduce([], fn dist, acc ->
+      case acc do
+        [prev | _] when prev.color == dist.color ->
+          new_idx = rem(node_color_hash(dist.node) + 7, palette_size)
+          [%{dist | color: Enum.at(@node_color_palette, new_idx)} | acc]
+
+        _ ->
+          [dist | acc]
+      end
+    end)
+    |> Enum.reverse()
   end
 
   defp extract_memory_bytes(%{"erlang" => %{"memory_total_mb" => mb}}) when is_number(mb),
@@ -219,10 +291,6 @@ defmodule RiakDashboardWeb.ClusterLive do
       data-ws-url={@ws_url}
       data-topics={@topics_json}
     >
-      <div class="flex items-center justify-end flex-wrap gap-3 mb-6">
-        <.connection_indicator status={@ws_status} />
-      </div>
-
       <.loading_text :if={@loading} label="Loading cluster data..." />
 
       <%= if @cluster do %>
@@ -230,9 +298,9 @@ defmodule RiakDashboardWeb.ClusterLive do
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           <.stat_card
             title="Cluster"
-            value={@cluster["cluster_name"]}
-            subtitle={"Claimant: #{@cluster["claimant"]}"}
-            tooltip={"#{@cluster["cluster_name"]}\nClaimant: #{@cluster["claimant"]}"}
+            value={@cluster_name}
+            subtitle={"Claimant: #{short_node_name(@cluster["claimant"])}"}
+            tooltip={"#{@cluster_name}\nClaimant: #{@cluster["claimant"]}"}
             icon="dashboard"
           />
           <.stat_card
@@ -267,30 +335,126 @@ defmodule RiakDashboardWeb.ClusterLive do
           />
         </div>
 
-        <%!-- Section 2: Node Chips --%>
+        <%!-- Section 2: Ring Distribution --%>
+        <div
+          :if={@ring}
+          class="mb-6 bg-white rounded-xl border border-[#EEEDEA] px-4 py-3 dark:bg-[var(--or-bg-surface)] dark:border-[var(--or-border-base)]"
+        >
+          <%!-- Header row --%>
+          <div class="flex items-center justify-between mb-2.5">
+            <div class="flex items-center gap-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-[#8A8A8A] dark:text-[#94A3B8]">
+                Ring
+              </h3>
+              <span class="text-xs text-[#1A1A1A] dark:text-[#E2E8F0]">
+                <span class="font-bold tabular-nums">{length(@ring["partitions"])}</span>
+                <span class="text-[#8A8A8A] dark:text-[#94A3B8]">partitions</span>
+              </span>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+              <%= if ring_balanced?(@node_dist) do %>
+                <span class="inline-flex items-center gap-1 text-[#22c55e]">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <circle
+                      cx="6"
+                      cy="6"
+                      r="5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      opacity="0.3"
+                    />
+                    <path
+                      d="M3.5 6L5.5 8L8.5 4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span class="font-medium">Balanced</span>
+                </span>
+              <% else %>
+                <span class="inline-flex items-center gap-1 text-[#f59e0b]">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M6 2L11 10H1L6 2Z" stroke="currentColor" stroke-width="1.2" fill="none" />
+                    <line
+                      x1="6"
+                      y1="5"
+                      x2="6"
+                      y2="7.5"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                    <circle cx="6" cy="8.8" r="0.6" fill="currentColor" />
+                  </svg>
+                  <span class="font-medium">Uneven</span>
+                </span>
+              <% end %>
+              <span class="text-[#8A8A8A] dark:text-[#94A3B8]">
+                Claimant
+                <span class="font-mono font-medium text-[#1A1A1A] dark:text-[#E2E8F0] ml-0.5">
+                  {short_node_name(@cluster["claimant"])}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <%!-- Stacked distribution bar --%>
+          <div class="flex h-2.5 rounded-full overflow-hidden gap-px bg-[#F5F3EF] dark:bg-[#334155]">
+            <div
+              :for={dist <- @node_dist}
+              class="h-full first:rounded-l-full last:rounded-r-full transition-all duration-300"
+              style={"width: #{dist.pct}%; background-color: #{dist.color};"}
+            />
+          </div>
+
+          <%!-- Legend --%>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5">
+            <div
+              :for={dist <- @node_dist}
+              class="flex items-center gap-1.5 text-[11px]"
+            >
+              <span
+                class="w-2.5 h-2.5 rounded-sm shrink-0"
+                style={"background-color: #{dist.color};"}
+              />
+              <span class="font-mono text-[#1A1A1A] dark:text-[#E2E8F0] truncate">
+                {short_node_name(dist.node)}
+              </span>
+              <span class="text-[#8A8A8A] dark:text-[#6B7280] tabular-nums">
+                {dist.count}
+              </span>
+              <span class="text-[#A8A8A8] dark:text-[#6B7280] tabular-nums">
+                ({dist.pct}%)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <%!-- Section 3: Node Chips --%>
         <div class="mb-6">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-[#8A8A8A] dark:text-[#94A3B8] mb-3">
             Nodes
           </h2>
-          <.node_chips nodes={@cluster["nodes"]} selected_node={@selected_node} />
+          <.node_chips
+            nodes={@cluster["nodes"]}
+            selected_node={@selected_node}
+            node_dist={@node_dist}
+            node_stats={@node_stats}
+          />
         </div>
 
-        <%!-- Section 3: Two-Panel Display --%>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
-          <div class="lg:col-span-7">
-            <.node_performance
-              nodes={@cluster["nodes"]}
-              selected_node={@selected_node}
-              node_stats={@node_stats}
-              sparkline_history={@sparkline_history}
-            />
-          </div>
-          <div class="lg:col-span-5">
-            <.ring_panel ring={@ring} node_dist={@node_dist} />
-          </div>
+        <%!-- Section 4: Metric Chart --%>
+        <div :if={@selected_node} class="mb-6">
+          <.metric_chart
+            selected_metric={@selected_metric}
+            data={chart_data_for(@sparkline_history, @selected_node, @selected_metric)}
+            unit={metric_unit(@selected_metric)}
+          />
         </div>
 
-        <%!-- Section 4: Remote Datacenters --%>
+        <%!-- Section 5: Remote Datacenters --%>
         <div
           :if={@cluster["remote_dcs"] != [] and @cluster["remote_dcs"] != nil}
           class="mt-2"
