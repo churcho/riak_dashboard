@@ -27,12 +27,13 @@ import RiakEvents from "./hooks/riak_events"
 import RingChart from "./hooks/ring_chart"
 import ThemeToggle from "./hooks/theme_toggle"
 import SidebarShell from "./hooks/sidebar_shell"
+import ChoicesSelect from "./hooks/choices_select"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RiakEvents, RingChart, ThemeToggle, SidebarShell}
+  hooks: {RiakEvents, RingChart, ThemeToggle, SidebarShell, ChoicesSelect}
 })
 
 // Show progress bar on live navigation and form submits

@@ -32,7 +32,6 @@ defmodule RiakDashboardWeb.ClusterLive do
         cluster: nil,
         cluster_name: nil,
         remote_dcs: [],
-        cluster_selector_open: false,
         node_stats: %{},
         ring: nil,
         node_dist: [],
@@ -117,30 +116,35 @@ defmodule RiakDashboardWeb.ClusterLive do
   def handle_event("ws_error", _data, socket), do: {:noreply, socket}
 
   # UI events
-  def handle_event("toggle_cluster_selector", _, socket) do
-    {:noreply, assign(socket, cluster_selector_open: !socket.assigns.cluster_selector_open)}
-  end
+  def handle_event("select_cluster", %{"name" => name}, socket) do
+    if name == socket.assigns.cluster_name do
+      {:noreply, socket}
+    else
+      case Enum.find(socket.assigns.remote_dcs, &(&1["name"] == name)) do
+        nil ->
+          {:noreply, socket}
 
-  def handle_event("select_cluster", %{"name" => name, "url" => admin_url}, socket) do
-    ws_url = derive_ws_url(admin_url)
+        dc ->
+          ws_url = derive_ws_url(dc["admin_url"])
 
-    {:noreply,
-     assign(socket,
-       ws_url: ws_url,
-       ws_status: :connecting,
-       cluster: nil,
-       cluster_name: name,
-       remote_dcs: [],
-       node_stats: %{},
-       ring: nil,
-       node_dist: [],
-       aae_count: 0,
-       handoff_count: 0,
-       selected_node: nil,
-       sparkline_history: %{},
-       loading: true,
-       cluster_selector_open: false
-     )}
+          {:noreply,
+           assign(socket,
+             ws_url: ws_url,
+             ws_status: :connecting,
+             cluster: nil,
+             cluster_name: name,
+             remote_dcs: [],
+             node_stats: %{},
+             ring: nil,
+             node_dist: [],
+             aae_count: 0,
+             handoff_count: 0,
+             selected_node: nil,
+             sparkline_history: %{},
+             loading: true
+           )}
+      end
+    end
   end
 
   def handle_event("select_node", %{"node" => node_name}, socket) do

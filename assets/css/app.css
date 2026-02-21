@@ -4,6 +4,8 @@
 @source "../js";
 @source "../../lib/riak_dashboard_web";
 @import "./openriak_tokens.css";
+@import "./vendor/choices.css";
+@import "./vendor/choices-theme.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

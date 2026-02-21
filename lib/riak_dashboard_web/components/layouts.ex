@@ -41,7 +41,6 @@ defmodule RiakDashboardWeb.Layouts do
         active_nav={assigns[:active_nav] || "Cluster"}
         cluster_name={assigns[:cluster_name]}
         remote_dcs={assigns[:remote_dcs] || []}
-        cluster_selector_open={assigns[:cluster_selector_open] || false}
       />
 
       <main id="main-content" class="flex-1 overflow-y-auto p-4 pt-14 sm:p-6 sm:pt-14 lg:pt-6">

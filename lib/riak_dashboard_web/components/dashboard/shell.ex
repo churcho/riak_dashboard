@@ -10,6 +10,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
   use Phoenix.Component
 
+  import RiakDashboardWeb.Components.Dashboard.ChoicesSelect
   import RiakDashboardWeb.Components.Dashboard.Icons
   import RiakDashboardWeb.CoreComponents, only: [icon: 1]
 
@@ -45,7 +46,6 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
   attr(:mobile, :boolean, default: false)
   attr(:cluster_name, :string, default: nil)
   attr(:remote_dcs, :list, default: [])
-  attr(:cluster_selector_open, :boolean, default: false)
 
   def sidebar(assigns) do
     assigns = assign(assigns, :nav_sections, @nav_sections)
@@ -65,7 +65,6 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
         mobile={@mobile}
         cluster_name={@cluster_name}
         remote_dcs={@remote_dcs}
-        cluster_selector_open={@cluster_selector_open}
       />
     </aside>
     """
@@ -76,7 +75,6 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
   attr(:mobile, :boolean, default: false)
   attr(:cluster_name, :string, default: nil)
   attr(:remote_dcs, :list, default: [])
-  attr(:cluster_selector_open, :boolean, default: false)
 
   defp sidebar_content(assigns) do
     ~H"""
@@ -103,43 +101,24 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
 
       <%!-- Cluster Selector --%>
       <div :if={@cluster_name} class="px-2.5 pb-2">
-        <button
-          type="button"
-          phx-click="toggle_cluster_selector"
-          class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg border border-[#E0DDD6] bg-[#F0EDE7] hover:bg-[#E8E5DE] transition-colors duration-150 dark:border-[#334155] dark:bg-[#334155] dark:hover:bg-[#3D4F63]"
-        >
+        <div class="flex items-center gap-2 px-2.5 py-1 mb-1">
           <span class="flex flex-shrink-0">
             <.nav_icon name="dashboard" />
           </span>
-          <span class="flex-1 text-left min-w-0">
-            <span class="block text-[10px] text-[#A8A8A8] dark:text-[#94A3B8] leading-none mb-0.5">
-              Cluster
-            </span>
-            <span class="block text-[13px] font-semibold text-[#1A1A1A] dark:text-[#F8FAFC] truncate leading-tight">
-              {@cluster_name}
-            </span>
+          <span class="text-[10px] font-semibold tracking-[1.2px] uppercase text-[#A8A8A8] dark:text-[#94A3B8]">
+            Cluster
           </span>
-          <.nav_icon
-            name="chevron-down"
-            class={"flex-shrink-0 text-[#A8A8A8] dark:text-[#94A3B8] transition-transform duration-150 #{if @cluster_selector_open, do: "rotate-180", else: ""}"}
-          />
-        </button>
-
-        <div
-          :if={@cluster_selector_open and @remote_dcs != []}
-          class="mt-1 rounded-lg border border-[#E0DDD6] bg-white overflow-hidden dark:border-[#334155] dark:bg-[#1E293B]"
-        >
-          <div
-            :for={dc <- @remote_dcs}
-            phx-click="select_cluster"
-            phx-value-name={dc["name"]}
-            phx-value-url={dc["admin_url"]}
-            class="flex items-center gap-2 px-3 py-2 text-[12px] text-[#5A5A5A] hover:bg-[#F5F3EF] cursor-pointer transition-colors duration-100 dark:text-[#94A3B8] dark:hover:bg-[#243447]"
-          >
-            <span class="w-1.5 h-1.5 rounded-full bg-[#A8A8A8]" />
-            <span class="truncate">{dc["name"]}</span>
-          </div>
         </div>
+        <.choices_select
+          id="cluster-selector"
+          options={build_cluster_options(@cluster_name, @remote_dcs)}
+          selected={@cluster_name}
+          event="select_cluster"
+          value_key="name"
+          compact
+          search_enabled={length(@remote_dcs) > 3}
+          placeholder="Select cluster..."
+        />
       </div>
 
       <%!-- Navigation --%>
@@ -274,4 +253,10 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
   defp humanize_section("DATA"), do: "Data"
   defp humanize_section("SETTINGS"), do: "Settings"
   defp humanize_section(_), do: nil
+
+  defp build_cluster_options(cluster_name, remote_dcs) do
+    current = [%{value: cluster_name, label: cluster_name}]
+    remotes = Enum.map(remote_dcs, fn dc -> %{value: dc["name"], label: dc["name"]} end)
+    current ++ remotes
+  end
 end

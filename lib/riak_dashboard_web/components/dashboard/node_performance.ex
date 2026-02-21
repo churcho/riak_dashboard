@@ -3,6 +3,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodePerformance do
 
   use Phoenix.Component
 
+  import RiakDashboardWeb.Components.Dashboard.ChoicesSelect
   import RiakDashboardWeb.Components.Dashboard.Sparkline
 
   @metrics [
@@ -59,20 +60,16 @@ defmodule RiakDashboardWeb.Components.Dashboard.NodePerformance do
         <h3 class="text-xs font-semibold uppercase tracking-wider text-[#8A8A8A] dark:text-[#94A3B8]">
           Node Performance
         </h3>
-        <form phx-change="select_node" class="m-0">
-          <select
-            name="node"
-            class="text-xs border border-[#EEEDEA] rounded-lg px-2 py-1 bg-white text-[#1A1A1A] dark:bg-[var(--or-bg-surface)] dark:border-[var(--or-border-base)] dark:text-[var(--or-fg-base)] focus:ring-1 focus:ring-[#e77117] focus:border-[#e77117]"
-          >
-            <option
-              :for={node <- @nodes}
-              value={node["name"]}
-              selected={node["name"] == @selected_node}
-            >
-              {node["name"]}
-            </option>
-          </select>
-        </form>
+        <.choices_select
+          id="node-performance-selector"
+          options={Enum.map(@nodes, &{&1["name"], &1["name"]})}
+          selected={@selected_node}
+          event="select_node"
+          value_key="node"
+          placeholder="Select a node..."
+          compact
+          search_enabled={length(@nodes) > 5}
+        />
       </div>
 
       <div
