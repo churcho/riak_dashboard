@@ -1,5 +1,5 @@
 defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
-  @moduledoc "Pure SVG sparkline renderer for metric trend visualization."
+  @moduledoc "Pure SVG sparkline with area fill and endpoint dot."
 
   use Phoenix.Component
 
@@ -11,7 +11,10 @@ defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
 
   def sparkline(assigns) do
     points = build_points(assigns.data, assigns.width, assigns.height)
-    assigns = assign(assigns, :points, points)
+    area = build_area(assigns.data, assigns.width, assigns.height)
+    endpoint = last_point(assigns.data, assigns.width, assigns.height)
+    uid = "spark-#{System.unique_integer([:positive])}"
+    assigns = assign(assigns, points: points, area: area, endpoint: endpoint, uid: uid)
 
     ~H"""
     <svg
@@ -21,6 +24,19 @@ defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
       role="img"
       aria-label="Sparkline trend"
     >
+      <defs :if={length(@data) > 1}>
+        <linearGradient id={@uid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color={@color} stop-opacity="0.2" />
+          <stop offset="100%" stop-color={@color} stop-opacity="0.02" />
+        </linearGradient>
+      </defs>
+
+      <polygon
+        :if={length(@data) > 1}
+        fill={"url(##{@uid})"}
+        points={@area}
+      />
+
       <polyline
         :if={length(@data) > 1}
         fill="none"
@@ -30,6 +46,15 @@ defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
         stroke-linejoin="round"
         points={@points}
       />
+
+      <circle
+        :if={@endpoint}
+        cx={elem(@endpoint, 0)}
+        cy={elem(@endpoint, 1)}
+        r="2"
+        fill={@color}
+      />
+
       <line
         :if={length(@data) <= 1}
         x1="0"
@@ -39,7 +64,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
         stroke={@color}
         stroke-width="1"
         stroke-dasharray="4 3"
-        opacity="0.4"
+        opacity="0.3"
       />
     </svg>
     """
@@ -49,10 +74,31 @@ defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
   defp build_points([_], w, h), do: "0,#{h / 2} #{w},#{h / 2}"
 
   defp build_points(data, w, h) do
+    coords(data, w, h)
+    |> Enum.map(fn {x, y} -> "#{x},#{y}" end)
+    |> Enum.join(" ")
+  end
+
+  defp build_area(data, w, h) when length(data) > 1 do
+    pts = coords(data, w, h)
+    line = Enum.map(pts, fn {x, y} -> "#{x},#{y}" end) |> Enum.join(" ")
+    {last_x, _} = List.last(pts)
+    "#{line} #{last_x},#{h} 0,#{h}"
+  end
+
+  defp build_area(_, _, _), do: ""
+
+  defp last_point(data, w, h) when length(data) > 1 do
+    coords(data, w, h) |> List.last()
+  end
+
+  defp last_point(_, _, _), do: nil
+
+  defp coords(data, w, h) do
     min_val = Enum.min(data)
     max_val = Enum.max(data)
     range = if max_val == min_val, do: 1, else: max_val - min_val
-    padding = 2
+    padding = 3
     usable_h = h - padding * 2
     step = w / max(length(data) - 1, 1)
 
@@ -61,8 +107,7 @@ defmodule RiakDashboardWeb.Components.Dashboard.Sparkline do
     |> Enum.map(fn {val, i} ->
       x = Float.round(i * step, 1)
       y = Float.round(padding + usable_h - (val - min_val) / range * usable_h, 1)
-      "#{x},#{y}"
+      {x, y}
     end)
-    |> Enum.join(" ")
   end
 end

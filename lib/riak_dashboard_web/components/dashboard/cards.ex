@@ -21,7 +21,10 @@ defmodule RiakDashboardWeb.Components.Dashboard.Cards do
       data-tip={@tooltip}
     >
       <div class="relative h-full bg-white rounded-xl border border-[#EEEDEA] px-3.5 py-3 overflow-hidden dark:bg-[#1f2937] dark:border-[#374151]">
-        <div :if={@icon} class={"absolute -bottom-1.5 -right-1.5 pointer-events-none #{@icon_color}"}>
+        <div
+          :if={@icon}
+          class={"absolute -bottom-1.5 -right-1.5 pointer-events-none motion-safe:animate-[icon-breathe_4s_ease-in-out_infinite] #{@icon_color}"}
+        >
           <.nav_icon name={@icon} size={44} />
         </div>
         <div class="relative">
