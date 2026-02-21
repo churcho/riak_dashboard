@@ -26,10 +26,13 @@ const ChoicesSelect = {
       placeholder: true,
       placeholderValue: placeholder,
       choices,
-      classNames: {
-        containerOuter: `choices ${compact ? "choices--compact" : ""}`,
-      }
     })
+
+    // Add compact class safely after initialization
+    if (compact) {
+      const outerEl = this.el.querySelector(".choices")
+      if (outerEl) outerEl.classList.add("choices--compact")
+    }
 
     this._select.addEventListener("change", (e) => {
       const eventName = this.el.dataset.event
