@@ -104,7 +104,7 @@ Browser
                        pushes events back to LiveView
 ```
 
-The dashboard is stateless -- it doesn't store anything itself. Every page either calls the Riak Admin API on demand (bucket operations, queries) or receives real-time updates over WebSocket (cluster status, ring, handoff, AAE).
+Most of the dashboard is stateless -- pages call the Riak Admin API on demand (bucket operations, queries) or receive real-time updates over WebSocket (cluster status, ring, handoff, AAE). The one exception is the `MetricStore` GenServer, which persists per-node metric history to a DETS file at `priv/data/metric_store.dets`. It stores four tiers of downsampled data (recent 5 min, hourly, daily, weekly) so the metric chart survives restarts.
 
 **Client behaviour:** `RiakDashboard.Cluster.Client` defines callbacks for every Riak API endpoint. `HttpClient` is the real implementation using the `Req` HTTP library with a 5-second timeout and no retries. In tests, `Mox` stubs the behaviour so nothing hits the network.
 
@@ -138,7 +138,7 @@ All bucket routes also work with typed buckets: `/types/:type/buckets/:bucket/..
 Tests use [Mox](https://github.com/dashbitco/mox) to stub the `Client` behaviour. No Riak connection needed.
 
 ```bash
-mix test                        # run all 62 tests
+mix test                        # run all tests
 mix test --cover                # with coverage
 mix credo --strict              # code quality
 mix sobelow                     # security scan
@@ -184,6 +184,7 @@ The dev server live-reloads Elixir code and rebuilds CSS/JS on file changes. Tai
 lib/
   riak_dashboard/
     application.ex              # supervision tree
+    metric_store.ex             # per-node metric history (DETS-backed)
     cluster/
       client.ex                 # behaviour (API contract)
       http_client.ex            # Req-based implementation
