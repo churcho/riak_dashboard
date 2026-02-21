@@ -31,7 +31,7 @@ defmodule RiakDashboardWeb.ClusterLive do
   @impl true
   def handle_params(_params, uri, socket) do
     path = URI.parse(uri).path
-    active_nav = if path == "/nodes", do: "Nodes", else: "Cluster"
+    active_nav = if path == "/nodes", do: "Nodes", else: ""
     {:noreply, assign(socket, active_nav: active_nav)}
   end
 
@@ -71,6 +71,22 @@ defmodule RiakDashboardWeb.ClusterLive do
      )}
   end
 
+  def handle_event("select_cluster", %{"name" => name, "url" => admin_url}, socket) do
+    ws_url = derive_ws_url(admin_url)
+
+    {:noreply,
+     assign(socket,
+       ws_url: ws_url,
+       ws_status: :connecting,
+       cluster: nil,
+       cluster_name: name,
+       remote_dcs: [],
+       node_stats: %{},
+       loading: true,
+       cluster_selector_open: false
+     )}
+  end
+
   def handle_event("riak_node_stats", data, socket) do
     {:noreply, assign(socket, node_stats: data)}
   end
@@ -89,6 +105,14 @@ defmodule RiakDashboardWeb.ClusterLive do
 
   def handle_event("ws_error", _data, socket) do
     {:noreply, socket}
+  end
+
+  defp derive_ws_url(admin_url) do
+    admin_url
+    |> String.replace_prefix("http://", "ws://")
+    |> String.replace_prefix("https://", "wss://")
+    |> String.trim_trailing("/")
+    |> Kernel.<>("/api/stream/events")
   end
 
   @impl true
