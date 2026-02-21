@@ -31,7 +31,7 @@ defmodule RiakDashboardWeb.ClusterLive do
   @impl true
   def handle_params(_params, uri, socket) do
     path = URI.parse(uri).path
-    active_nav = if path == "/nodes", do: "Nodes", else: ""
+    active_nav = if path == "/nodes", do: "Nodes", else: nil
     {:noreply, assign(socket, active_nav: active_nav)}
   end
 
