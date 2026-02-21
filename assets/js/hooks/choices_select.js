@@ -11,6 +11,10 @@ const ChoicesSelect = {
     const options = JSON.parse(this.el.dataset.options || "[]")
     const selected = this.el.dataset.selected
 
+    // Cache initial state to avoid unnecessary re-renders
+    this._lastOptions = this.el.dataset.options
+    this._lastSelected = selected
+
     const choices = options.map(o => ({
       value: o.value,
       label: o.label,
@@ -44,10 +48,24 @@ const ChoicesSelect = {
   },
 
   updated() {
-    if (!this._choices) return
-
-    const newOptions = JSON.parse(this.el.dataset.options || "[]")
+    const newOptionsRaw = this.el.dataset.options || "[]"
     const newSelected = this.el.dataset.selected
+
+    // Safety reinitialize if Choices was destroyed unexpectedly
+    if (!this._choices) {
+      this.mounted()
+      return
+    }
+
+    // Skip refresh when data hasn't changed
+    if (newOptionsRaw === this._lastOptions && newSelected === this._lastSelected) {
+      return
+    }
+
+    this._lastOptions = newOptionsRaw
+    this._lastSelected = newSelected
+
+    const newOptions = JSON.parse(newOptionsRaw)
 
     this._choices.clearStore()
     this._choices.setChoices(
