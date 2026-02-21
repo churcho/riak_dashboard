@@ -42,6 +42,21 @@ RIAK_WS_URL=ws://my-riak-node:8099/api/stream/events \
 mix phx.server
 ```
 
+For local quickstart clusters where Riak nodes run as `dev1`, `dev2`, etc., the admin API usually binds to `10015`, `10025`, `10035`, ... (`devN` -> `100N5`).  
+Use `local.env` before starting:
+
+```bash
+source local.env
+mix phx.server
+```
+
+`local.env` probes for the first responsive admin port and sets:
+
+* `RIAK_ADMIN_URL`
+* `RIAK_WS_URL`
+* `RIAK_DASHBOARD_USER`
+* `RIAK_DASHBOARD_PASS`
+
 ## Configuration
 
 All configuration comes from environment variables, read at startup in `config/runtime.exs`.
