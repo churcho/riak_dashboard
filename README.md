@@ -19,7 +19,7 @@ The dashboard connects to a Riak node's Admin API over HTTP and (optionally) its
 ## Prerequisites
 
 - **Elixir 1.18+** and **Erlang/OTP 26+** ([install guide](https://elixir-lang.org/install.html))
-- **A running Riak node** with the Admin API enabled (port 8099 by default). The dashboard works without one, but most pages will show errors or empty state.
+- **A running Riak node** with the Admin API enabled. Standalone nodes default to port 8099; quickstart devrel clusters use 10015/10025/10035/... The dashboard works without one, but most pages will show errors or empty state.
 
 ## Quick start
 
@@ -42,14 +42,23 @@ RIAK_WS_URL=ws://my-riak-node:8099/api/stream/events \
 mix phx.server
 ```
 
-For local quickstart clusters where Riak nodes run as `dev1`, `dev2`, etc., the admin API usually binds to `10015`, `10025`, `10035`, ... (`devN` -> `100N5`).
+For local quickstart clusters where Riak nodes run as `dev1`, `dev2`, etc., the admin API binds to `10015`, `10025`, `10035`, ... (`devN` -> `100N5`).
 
-Copy and source the sample:
+Copy and source the sample, then uncomment the quickstart or standalone profile:
 
 ```bash
 cp example.local.env local.env
-source local.env
+# Edit local.env — uncomment the profile matching your setup
+source local.env        # bash/zsh
+# source local.env      # fish (use set -x instead of export)
 mix phx.server
+```
+
+Or use the quickstart helper directly:
+
+```bash
+RIAK_DIR=/path/to/riak RIAK_DASHBOARD_DIR=/path/to/riak_dashboard \
+  /path/to/riak_quickstart/06_start_dashboard.sh
 ```
 
 `local.env` probes for the first responsive admin port and sets:
