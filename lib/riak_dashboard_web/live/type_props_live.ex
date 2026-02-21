@@ -233,8 +233,8 @@ defmodule RiakDashboardWeb.TypePropsLive do
         <span class="text-[#1A1A1A] font-medium">Properties</span>
       </nav>
 
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
           Properties for type <code class="text-[#e77117]">{@type}</code>
         </h1>
         <button

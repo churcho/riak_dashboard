@@ -85,8 +85,10 @@ defmodule RiakDashboardWeb.ClusterLive do
       data-ws-url={@ws_url}
       data-topics={@topics_json}
     >
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">Cluster Overview</h1>
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
+          Cluster Overview
+        </h1>
         <.connection_indicator status={@ws_status} />
       </div>
 
@@ -113,7 +115,7 @@ defmodule RiakDashboardWeb.ClusterLive do
         </div>
 
         <div class="mb-4">
-          <h2 class="text-lg font-semibold mb-3 text-[#1A1A1A]">Nodes</h2>
+          <h2 class="text-lg font-semibold mb-3 text-[#1A1A1A] dark:text-[#E2E8F0]">Nodes</h2>
           <.node_table nodes={@cluster["nodes"]} node_stats={@node_stats} />
         </div>
 
@@ -121,7 +123,7 @@ defmodule RiakDashboardWeb.ClusterLive do
           :if={@cluster["remote_dcs"] != [] and @cluster["remote_dcs"] != nil}
           class="mt-6"
         >
-          <h2 class="text-lg font-semibold mb-3 text-[#1A1A1A]">
+          <h2 class="text-lg font-semibold mb-3 text-[#1A1A1A] dark:text-[#E2E8F0]">
             Remote Datacenters
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -124,8 +124,8 @@ defmodule RiakDashboardWeb.KeysLive do
         <span class="text-[#1A1A1A] font-medium">{@bucket}</span>
       </nav>
 
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
           Keys in <code class="text-[#e77117]">{@bucket}</code>
         </h1>
         <div class="flex items-center gap-2">

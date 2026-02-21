@@ -132,8 +132,8 @@ defmodule RiakDashboardWeb.CounterLive do
   def render(%{live_action: :index} = assigns) do
     ~H"""
     <div>
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">Counters</h1>
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">Counters</h1>
       </div>
 
       <div class="bg-white rounded-xl border border-[#EEEDEA] p-4">
@@ -179,8 +179,8 @@ defmodule RiakDashboardWeb.CounterLive do
         <span class="text-[#1A1A1A] font-medium">{@key}</span>
       </nav>
 
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
           {@key}
         </h1>
       </div>

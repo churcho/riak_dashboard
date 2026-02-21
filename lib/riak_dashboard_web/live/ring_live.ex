@@ -92,8 +92,10 @@ defmodule RiakDashboardWeb.RingLive do
       data-ws-url={@ws_url}
       data-topics={@topics_json}
     >
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">Ring Ownership</h1>
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
+          Ring Ownership
+        </h1>
         <.connection_indicator status={@ws_status} />
       </div>
 

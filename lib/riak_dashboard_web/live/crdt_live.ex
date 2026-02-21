@@ -180,8 +180,8 @@ defmodule RiakDashboardWeb.CrdtLive do
   def render(%{live_action: :index} = assigns) do
     ~H"""
     <div>
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-[#1A1A1A]">CRDTs</h1>
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">CRDTs</h1>
       </div>
 
       <.error_banner :if={@error} message={@error} />
@@ -276,9 +276,9 @@ defmodule RiakDashboardWeb.CrdtLive do
         <span class="text-[#1A1A1A] font-medium">{@key}</span>
       </nav>
 
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold text-[#1A1A1A]">
+          <h1 class="text-xl sm:text-2xl font-bold text-[#1A1A1A] dark:text-[#E2E8F0]">
             {@key}
           </h1>
           <%= if @crdt_type do %>
