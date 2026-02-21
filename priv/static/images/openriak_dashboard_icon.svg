@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="ringG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8731A"/>
+      <stop offset="100%" stop-color="#D4621A"/>
+    </linearGradient>
+    <linearGradient id="nodeG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5923A"/>
+      <stop offset="100%" stop-color="#E8731A"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(60, 60)">
+    <!-- Outer ring -->
+    <circle cx="0" cy="0" r="44" fill="none" stroke="url(#ringG)" stroke-width="4" opacity="0.9"/>
+    
+    <!-- Inner dashed ring -->
+    <circle cx="0" cy="0" r="27" fill="none" stroke="#E8731A" stroke-width="1.8" opacity="0.3" stroke-dasharray="5 3.5"/>
+    
+    <!-- 6 nodes -->
+    <circle cx="0" cy="-44" r="6.5" fill="url(#nodeG)"/>
+    <circle cx="38.1" cy="-22" r="6.5" fill="url(#nodeG)"/>
+    <circle cx="38.1" cy="22" r="6.5" fill="url(#nodeG)"/>
+    <circle cx="0" cy="44" r="6.5" fill="url(#nodeG)"/>
+    <circle cx="-38.1" cy="22" r="6.5" fill="url(#nodeG)"/>
+    <circle cx="-38.1" cy="-22" r="6.5" fill="url(#nodeG)"/>
+    
+    <!-- Spokes -->
+    <line x1="0" y1="-44" x2="0" y2="0" stroke="#E8731A" stroke-width="0.8" opacity="0.15"/>
+    <line x1="38.1" y1="-22" x2="0" y2="0" stroke="#E8731A" stroke-width="0.8" opacity="0.15"/>
+    <line x1="38.1" y1="22" x2="0" y2="0" stroke="#E8731A" stroke-width="0.8" opacity="0.15"/>
+    <line x1="0" y1="44" x2="0" y2="0" stroke="#E8731A" stroke-width="0.8" opacity="0.15"/>
+    <line x1="-38.1" y1="22" x2="0" y2="0" stroke="#E8731A" stroke-width="0.8" opacity="0.15"/>
+    <line x1="-38.1" y1="-22" x2="0" y2="0" stroke="#E8731A" stroke-width="0.8" opacity="0.15"/>
+
+    <!-- Center -->
+    <circle cx="0" cy="0" r="4.5" fill="#E8731A" opacity="0.45"/>
+    
+    <!-- Gear badge -->
+    <g transform="translate(29, 29) scale(0.65)">
+      <circle cx="0" cy="0" r="14" fill="#3D4F5F"/>
+      <path d="M-2.5,-15 L2.5,-15 L3,-11 L-3,-11 Z" fill="#3D4F5F"/>
+      <path d="M-2.5,15 L2.5,15 L3,11 L-3,11 Z" fill="#3D4F5F"/>
+      <path d="M-15,-2.5 L-15,2.5 L-11,3 L-11,-3 Z" fill="#3D4F5F"/>
+      <path d="M15,-2.5 L15,2.5 L11,3 L11,-3 Z" fill="#3D4F5F"/>
+      <path d="M9,-11.5 L12.5,-8.5 L9.5,-6 L6.5,-9 Z" fill="#3D4F5F"/>
+      <path d="M-9,11.5 L-12.5,8.5 L-9.5,6 L-6.5,9 Z" fill="#3D4F5F"/>
+      <path d="M-11.5,-9 L-8.5,-12.5 L-6,-9.5 L-9,-6.5 Z" fill="#3D4F5F"/>
+      <path d="M11.5,9 L8.5,12.5 L6,9.5 L9,6.5 Z" fill="#3D4F5F"/>
+      <circle cx="0" cy="0" r="7" fill="#F0F2F4"/>
+      <circle cx="0" cy="0" r="3.5" fill="#3D4F5F"/>
+    </g>
+  </g>
+</svg>

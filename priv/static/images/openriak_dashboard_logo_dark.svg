@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 160" width="520" height="160">
+  <defs>
+    <linearGradient id="ringGradD" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5923A"/>
+      <stop offset="100%" stop-color="#E8731A"/>
+    </linearGradient>
+    <linearGradient id="nodeGradD" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFAA55"/>
+      <stop offset="100%" stop-color="#F5923A"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(80, 80)">
+    <circle cx="0" cy="0" r="48" fill="none" stroke="url(#ringGradD)" stroke-width="4.5" opacity="0.9"/>
+    <circle cx="0" cy="0" r="30" fill="none" stroke="#F5923A" stroke-width="2" opacity="0.25" stroke-dasharray="6 4"/>
+
+    <circle cx="0" cy="-48" r="7" fill="url(#nodeGradD)"/>
+    <circle cx="41.6" cy="-24" r="7" fill="url(#nodeGradD)"/>
+    <circle cx="41.6" cy="24" r="7" fill="url(#nodeGradD)"/>
+    <circle cx="0" cy="48" r="7" fill="url(#nodeGradD)"/>
+    <circle cx="-41.6" cy="24" r="7" fill="url(#nodeGradD)"/>
+    <circle cx="-41.6" cy="-24" r="7" fill="url(#nodeGradD)"/>
+
+    <line x1="0" y1="-48" x2="0" y2="0" stroke="#F5923A" stroke-width="1" opacity="0.12"/>
+    <line x1="41.6" y1="-24" x2="0" y2="0" stroke="#F5923A" stroke-width="1" opacity="0.12"/>
+    <line x1="41.6" y1="24" x2="0" y2="0" stroke="#F5923A" stroke-width="1" opacity="0.12"/>
+    <line x1="0" y1="48" x2="0" y2="0" stroke="#F5923A" stroke-width="1" opacity="0.12"/>
+    <line x1="-41.6" y1="24" x2="0" y2="0" stroke="#F5923A" stroke-width="1" opacity="0.12"/>
+    <line x1="-41.6" y1="-24" x2="0" y2="0" stroke="#F5923A" stroke-width="1" opacity="0.12"/>
+
+    <circle cx="0" cy="0" r="5" fill="#F5923A" opacity="0.4"/>
+
+    <g transform="translate(32, 32) scale(0.7)">
+      <circle cx="0" cy="0" r="14" fill="#8CA0B3"/>
+      <path d="M-2.5,-15 L2.5,-15 L3,-11 L-3,-11 Z" fill="#8CA0B3"/>
+      <path d="M-2.5,15 L2.5,15 L3,11 L-3,11 Z" fill="#8CA0B3"/>
+      <path d="M-15,-2.5 L-15,2.5 L-11,3 L-11,-3 Z" fill="#8CA0B3"/>
+      <path d="M15,-2.5 L15,2.5 L11,3 L11,-3 Z" fill="#8CA0B3"/>
+      <path d="M9,-11.5 L12.5,-8.5 L9.5,-6 L6.5,-9 Z" fill="#8CA0B3"/>
+      <path d="M-9,11.5 L-12.5,8.5 L-9.5,6 L-6.5,9 Z" fill="#8CA0B3"/>
+      <path d="M-11.5,-9 L-8.5,-12.5 L-6,-9.5 L-9,-6.5 Z" fill="#8CA0B3"/>
+      <path d="M11.5,9 L8.5,12.5 L6,9.5 L9,6.5 Z" fill="#8CA0B3"/>
+      <circle cx="0" cy="0" r="7" fill="#1A2332"/>
+      <circle cx="0" cy="0" r="3.5" fill="#8CA0B3"/>
+    </g>
+  </g>
+
+  <text x="148" y="92" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="34" font-weight="700" fill="#E8E8E8" letter-spacing="-0.3">
+    <tspan fill="#F5923A">riak</tspan><tspan fill="#E8E8E8">-dashboard</tspan>
+  </text>
+</svg>

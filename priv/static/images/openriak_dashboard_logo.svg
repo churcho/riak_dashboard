@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 160" width="520" height="160">
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8731A"/>
+      <stop offset="100%" stop-color="#D4621A"/>
+    </linearGradient>
+    <linearGradient id="nodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5923A"/>
+      <stop offset="100%" stop-color="#E8731A"/>
+    </linearGradient>
+    <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5B6B7A"/>
+      <stop offset="100%" stop-color="#3D4F5F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: Ring with distributed nodes -->
+  <g transform="translate(80, 80)">
+    <!-- Outer ring -->
+    <circle cx="0" cy="0" r="48" fill="none" stroke="url(#ringGrad)" stroke-width="4.5" opacity="0.9"/>
+
+    <!-- Inner ring (lighter, represents vnode ring) -->
+    <circle cx="0" cy="0" r="30" fill="none" stroke="#E8731A" stroke-width="2" opacity="0.35" stroke-dasharray="6 4"/>
+
+    <!-- Distributed nodes on the ring (6 nodes at even intervals) -->
+    <circle cx="0" cy="-48" r="7" fill="url(#nodeGrad)"/>
+    <circle cx="41.6" cy="-24" r="7" fill="url(#nodeGrad)"/>
+    <circle cx="41.6" cy="24" r="7" fill="url(#nodeGrad)"/>
+    <circle cx="0" cy="48" r="7" fill="url(#nodeGrad)"/>
+    <circle cx="-41.6" cy="24" r="7" fill="url(#nodeGrad)"/>
+    <circle cx="-41.6" cy="-24" r="7" fill="url(#nodeGrad)"/>
+
+    <!-- Inner node connections (subtle lines connecting to center) -->
+    <line x1="0" y1="-48" x2="0" y2="0" stroke="#E8731A" stroke-width="1" opacity="0.15"/>
+    <line x1="41.6" y1="-24" x2="0" y2="0" stroke="#E8731A" stroke-width="1" opacity="0.15"/>
+    <line x1="41.6" y1="24" x2="0" y2="0" stroke="#E8731A" stroke-width="1" opacity="0.15"/>
+    <line x1="0" y1="48" x2="0" y2="0" stroke="#E8731A" stroke-width="1" opacity="0.15"/>
+    <line x1="-41.6" y1="24" x2="0" y2="0" stroke="#E8731A" stroke-width="1" opacity="0.15"/>
+    <line x1="-41.6" y1="-24" x2="0" y2="0" stroke="#E8731A" stroke-width="1" opacity="0.15"/>
+
+    <!-- Center dot -->
+    <circle cx="0" cy="0" r="5" fill="#E8731A" opacity="0.5"/>
+
+    <!-- Admin gear overlay (small, bottom-right quadrant) -->
+    <g transform="translate(32, 32) scale(0.7)">
+      <circle cx="0" cy="0" r="14" fill="#3D4F5F"/>
+      <!-- Gear teeth -->
+      <path d="M-2.5,-15 L2.5,-15 L3,-11 L-3,-11 Z" fill="#3D4F5F"/>
+      <path d="M-2.5,15 L2.5,15 L3,11 L-3,11 Z" fill="#3D4F5F"/>
+      <path d="M-15,-2.5 L-15,2.5 L-11,3 L-11,-3 Z" fill="#3D4F5F"/>
+      <path d="M15,-2.5 L15,2.5 L11,3 L11,-3 Z" fill="#3D4F5F"/>
+      <path d="M9,-11.5 L12.5,-8.5 L9.5,-6 L6.5,-9 Z" fill="#3D4F5F"/>
+      <path d="M-9,11.5 L-12.5,8.5 L-9.5,6 L-6.5,9 Z" fill="#3D4F5F"/>
+      <path d="M-11.5,-9 L-8.5,-12.5 L-6,-9.5 L-9,-6.5 Z" fill="#3D4F5F"/>
+      <path d="M11.5,9 L8.5,12.5 L6,9.5 L9,6.5 Z" fill="#3D4F5F"/>
+      <!-- Gear inner circle -->
+      <circle cx="0" cy="0" r="7" fill="#F0F2F4"/>
+      <circle cx="0" cy="0" r="3.5" fill="#3D4F5F"/>
+    </g>
+  </g>
+
+  <text x="148" y="92" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="34" font-weight="700" fill="#2C3E50" letter-spacing="-0.3">
+    <tspan fill="#E8731A">riak</tspan><tspan fill="#2C3E50">-dashboard</tspan>
+  </text>
+</svg>
