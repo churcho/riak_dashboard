@@ -34,8 +34,16 @@ defmodule RiakDashboard.Test.RiakStubs do
          end),
        "pending_changes" => [],
        "remote_dcs" => [
-         %{"name" => "us-west-2", "admin_url" => "http://10.0.2.1:8098", "riak_version" => "3.2.0"},
-         %{"name" => "eu-central-1", "admin_url" => "http://10.0.3.1:8098", "riak_version" => "3.2.0"}
+         %{
+           "name" => "us-west-2",
+           "admin_url" => "http://10.0.2.1:8098",
+           "riak_version" => "3.2.0"
+         },
+         %{
+           "name" => "eu-central-1",
+           "admin_url" => "http://10.0.3.1:8098",
+           "riak_version" => "3.2.0"
+         }
        ],
        "total_dcs" => 3
      }}

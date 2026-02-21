@@ -115,7 +115,9 @@ defmodule RiakDashboardWeb.Components.Dashboard.Shell do
             <.nav_icon name="dashboard" />
           </span>
           <span class="flex-1 text-left min-w-0">
-            <span class="block text-[10px] text-[#A8A8A8] dark:text-[#94A3B8] leading-none mb-0.5">Cluster</span>
+            <span class="block text-[10px] text-[#A8A8A8] dark:text-[#94A3B8] leading-none mb-0.5">
+              Cluster
+            </span>
             <span class="block text-[13px] font-semibold text-[#1A1A1A] dark:text-[#F8FAFC] truncate leading-tight">
               {@cluster_name}
             </span>
